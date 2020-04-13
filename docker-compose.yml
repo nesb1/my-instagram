@@ -1,0 +1,9 @@
+version: '2.4'
+
+services:
+  code:
+    image: "final_project"
+    build:
+      context: .
+      dockerfile: Dockerfile
+      network: host
