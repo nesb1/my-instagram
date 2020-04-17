@@ -26,7 +26,10 @@ format:
 	$(VENV)/bin/autoflake --recursive --in-place --remove-all-unused-imports $(ALL)
 	$(VENV)/bin/unify --in-place --recursive $(ALL)
 
-up: ; # write your own
+up: 
+	uvicorn $(CODE).main:app --host=0.0.0.0
+
+
 
 build:
 	docker-compose build code

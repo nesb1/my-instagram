@@ -1,0 +1,2 @@
+class UsersDALError(Exception):
+    pass

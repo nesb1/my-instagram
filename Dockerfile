@@ -20,7 +20,7 @@ RUN apt-get update \
         make \
  && rm -rf /var/lib/apt/lists/*
 
-# copy your project 
+COPY pyproject.toml poetry.lock /code/
 
 RUN pip install --no-compile --upgrade pip \
  && pip install --no-compile poetry \
@@ -28,4 +28,9 @@ RUN pip install --no-compile --upgrade pip \
  && poetry install --no-dev --no-interaction --no-ansi \
  && pip uninstall --yes poetry 
 
-# run it
+COPY Makefile /code/
+
+COPY ./final_project /code/final_project
+
+ENTRYPOINT [""]
+CMD ["make", "up"]

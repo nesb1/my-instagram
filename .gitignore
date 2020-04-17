@@ -71,3 +71,9 @@ allure-results/
 # Documentation
 _build/
 reference/
+
+# database
+my.db
+
+# poetry
+poetry.lock
