@@ -7,3 +7,5 @@ class User(Base):
     id = sa.Column(sa.Integer, primary_key=True, index=True)
     username = sa.Column(sa.String, unique=True)
     password_hash = sa.Column(sa.String)
+    access_token = sa.Column(sa.String)
+    refresh_token = sa.Column(sa.String)

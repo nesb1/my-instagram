@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Awaitable
+from typing import Awaitable, Optional
 
 from final_project.database.database import create_session, run_in_threadpool
 from final_project.database.models import User
@@ -28,3 +28,14 @@ class UsersDataAccessLayer:
             session.add(new_user)
             session.flush()
             return deepcopy(new_user)
+
+    @staticmethod
+    @run_in_threadpool
+    def get_user(
+        user_id: int, without_error: bool = False
+    ) -> Awaitable[Optional[User]]:
+        with create_session() as session:
+            user = session.query(User).filter(User.id == user_id).first()
+            if not user and not without_error:
+                raise UsersDALError(Message.USER_DOES_NOT_EXISTS.value)
+            return deepcopy(user)
