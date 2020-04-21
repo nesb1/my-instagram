@@ -34,7 +34,7 @@ def test_refresh_toke_returns_expected_value(
 ):
     mocked_auth.refresh_tokens.return_value = tokens_for_test
     response = client.post('/auth/fresh_token', json=refresh_token_payload)
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.CREATED
     json = response.json()
     assert len(json) == 3
     assert json['access_token'] == tokens_for_test.access_token.decode()
@@ -63,7 +63,7 @@ def test_login_returns_expected_value(mocked_auth, client, tokens_for_test, auth
     mocked_auth.generate_tokens.return_value = tokens_for_test
     response = client.post('/auth/token', data=auth_data)
     json = response.json()
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.CREATED
     assert len(json) == 3
     assert json['access_token'] == tokens_for_test.access_token.decode()
     assert json['refresh_token'] == tokens_for_test.refresh_token.decode()

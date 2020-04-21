@@ -5,16 +5,14 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from final_project.data_access_layer import auth
 from final_project.exceptions import AuthDALError
-from final_project.models import ErrorMessage, FreshTokenInput, TokensResponse
+from final_project.models import FreshTokenInput, TokensResponse
 from starlette.responses import JSONResponse
 
 router = APIRouter()
 
 
 @router.post(
-    '/token',
-    response_model=TokensResponse,
-    responses={HTTPStatus.BAD_REQUEST.value: {'model': ErrorMessage}},
+    '/token', response_model=TokensResponse, status_code=HTTPStatus.CREATED.value
 )
 async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
     '''
@@ -30,9 +28,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
 
 
 @router.post(
-    '/fresh_token',
-    response_model=TokensResponse,
-    responses={HTTPStatus.BAD_REQUEST.value: {'model': ErrorMessage}},
+    '/fresh_token', response_model=TokensResponse, status_code=HTTPStatus.CREATED.value
 )
 async def get_fresh_token(refresh_token: FreshTokenInput) -> Any:
     try:

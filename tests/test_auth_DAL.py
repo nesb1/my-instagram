@@ -2,18 +2,16 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 
 import pytest
-from fastapi import HTTPException
-from starlette.responses import JSONResponse
-
 from final_project.config import tokens_settings
 from final_project.data_access_layer.auth import (
+    check_authorization,
     generate_tokens,
-    get_user,
     refresh_tokens,
 )
 from final_project.database.database import create_session
 from final_project.database.models import User
 from final_project.exceptions import AuthDALError
+from starlette.responses import JSONResponse
 
 
 @pytest.fixture()
@@ -72,7 +70,7 @@ async def test_get_tokens_save_tokens_to_db(username, password, tokens):
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('_add_user')
 async def test_auth_will_let_enter_authentic_user(username, password, tokens):
-    user = await get_user(tokens.access_token.decode())
+    user = await check_authorization(tokens.access_token.decode())
     assert user
 
 
@@ -83,7 +81,7 @@ async def test_get_tokens_generates_new_token_pair_for_new_authorization_and_old
 ):
     # старая пара должна быть не валидна, хотя время жизни токена еще не истекло
     await generate_tokens(username, password)
-    res = await get_user(tokens.access_token.decode())
+    res = await check_authorization(tokens.access_token.decode())
     assert isinstance(res, JSONResponse)
     assert res.status_code == HTTPStatus.BAD_REQUEST
 

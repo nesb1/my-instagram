@@ -1,13 +1,11 @@
 from copy import deepcopy
 from datetime import datetime, timedelta
 from http import HTTPStatus
-from typing import Any, Awaitable, Dict, Optional
+from typing import Any, Awaitable, Dict, Optional, Union
 
 import jwt
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
-from starlette.responses import JSONResponse
-
 from final_project.config import tokens_settings
 from final_project.data_access_layer.users import UsersDataAccessLayer
 from final_project.database.database import create_session, run_in_threadpool
@@ -17,12 +15,13 @@ from final_project.messages import Message
 from final_project.models import TokensResponse
 from final_project.password import get_password_hash
 from jwt import PyJWTError
-from starlette import status
+from starlette.responses import JSONResponse
 
 SECRET_KEY = '123'
 ALGORITHM = 'HS256'
 TOKEN_TYPE = 'bearer'
 oauth_scheme = OAuth2PasswordBearer(tokenUrl='/auth/token')
+
 
 async def _get_user_from_db(user_id: int) -> User:
     user = await UsersDataAccessLayer.get_user(user_id, without_error=True)
@@ -46,7 +45,9 @@ def _is_valid_token(actual_token: str, expected_token: str) -> bool:
     return actual_token == expected_token
 
 
-async def get_user(token: str = Depends(oauth_scheme)) -> [User, JSONResponse]:
+async def check_authorization(
+    token: str = Depends(oauth_scheme),
+) -> Union[User, JSONResponse]:
     '''
     Обрабатывает jwt
     :raises HttpException со статусом 401 если произошла ошибка при обработке токена
@@ -59,8 +60,11 @@ async def get_user(token: str = Depends(oauth_scheme)) -> [User, JSONResponse]:
             return user
         raise AuthDALError(Message.ACCESS_TOKEN_OUTDATED.value)
     except AuthDALError as e:
-        return JSONResponse(status_code=HTTPStatus.BAD_REQUEST, headers={'WWW-Authenticate': 'Bearer'},
-                            content={"message": str(e)})
+        return JSONResponse(
+            status_code=HTTPStatus.BAD_REQUEST,
+            headers={'WWW-Authenticate': 'Bearer'},
+            content={'message': str(e)},
+        )
 
 
 def _is_password_correct(password: str, expected_password_hash: str) -> bool:
