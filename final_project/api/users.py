@@ -29,7 +29,7 @@ async def register_user(user: InUser) -> Any:
         )
 
 
-@router.get('/')
+@router.get('/', responses={HTTPStatus.UNAUTHORIZED.value : {"model" : ErrorMessage}})
 async def k(user: User = Depends(get_user)) -> Any:
     '''
     Функция для ручного теста

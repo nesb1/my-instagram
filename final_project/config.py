@@ -1,3 +1,5 @@
+import logging
+
 from pydantic import BaseSettings
 
 
@@ -7,4 +9,15 @@ class TokensSettings(BaseSettings):
     token_type = 'bearer'
 
 
+class LoggingSettings(BaseSettings):
+    level = logging.INFO
+    file_name = 'logs.log'
+
+
+class AppSettings(BaseSettings):
+    name = 'todo'
+
+
+app_settings = AppSettings()
 tokens_settings = TokensSettings()
+logging_settings = LoggingSettings()

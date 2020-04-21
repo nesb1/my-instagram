@@ -1,12 +1,7 @@
-# import jwt
 from http import HTTPStatus
 from typing import Any
 
 from fastapi import APIRouter, Depends
-
-# from fastapi.security import OAuth2PasswordBearer
-# from pydantic import BaseModel
-# from starlette import status
 from fastapi.security import OAuth2PasswordRequestForm
 from final_project.data_access_layer import auth
 from final_project.exceptions import AuthDALError
@@ -16,7 +11,11 @@ from starlette.responses import JSONResponse
 router = APIRouter()
 
 
-@router.post('/token', response_model=TokensResponse)
+@router.post(
+    '/token',
+    response_model=TokensResponse,
+    responses={HTTPStatus.BAD_REQUEST.value: {'model': ErrorMessage}},
+)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
     '''
     Проверяет есть ли пользователь в системе, возвращает refresh token и access token

@@ -1,7 +1,10 @@
 from datetime import datetime, timedelta
+from http import HTTPStatus
 
 import pytest
 from fastapi import HTTPException
+from starlette.responses import JSONResponse
+
 from final_project.config import tokens_settings
 from final_project.data_access_layer.auth import (
     generate_tokens,
@@ -80,8 +83,9 @@ async def test_get_tokens_generates_new_token_pair_for_new_authorization_and_old
 ):
     # старая пара должна быть не валидна, хотя время жизни токена еще не истекло
     await generate_tokens(username, password)
-    with pytest.raises(HTTPException):
-        await get_user(tokens.access_token.decode())
+    res = await get_user(tokens.access_token.decode())
+    assert isinstance(res, JSONResponse)
+    assert res.status_code == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.asyncio
