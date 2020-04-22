@@ -18,6 +18,12 @@ class AppSettings(BaseSettings):
     name = 'todo'
 
 
+class ImageStorageSettings(BaseSettings):
+    items_in_one_folder = 1000
+    storage_folder_name = 'image storage'
+
+
+image_storage_settings = ImageStorageSettings()
 app_settings = AppSettings()
 tokens_settings = TokensSettings()
 logging_settings = LoggingSettings()

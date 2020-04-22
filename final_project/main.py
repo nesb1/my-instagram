@@ -35,7 +35,7 @@ def get_app() -> FastAPI:
         users.router,
         prefix='/users',
         tags=['users'],
-        responses={HTTPStatus.BAD_REQUEST.value: {'model': ErrorMessage},},
+        responses={HTTPStatus.BAD_REQUEST.value: {'model': ErrorMessage}},
     )
     _app.include_router(
         auth.router,

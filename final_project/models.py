@@ -1,5 +1,6 @@
+import re
 from datetime import datetime
-from typing import Any, List
+from typing import Any, Callable, Iterable, List
 
 from pydantic import BaseModel
 
@@ -45,6 +46,21 @@ class FreshTokenInput(BaseModel):
     token: str
 
 
+class Base64(bytes):
+    @classmethod
+    def __get_validators__(cls) -> Iterable[Callable[[Any], bytes]]:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: Any) -> bytes:
+        if value is None or not isinstance(value, str):
+            raise ValueError(f'actual value type is {type(value)} but expected{str}',)
+        pattern = re.compile('^[A-Za-z0-9+/]+={0,2}$')
+        if not re.match(pattern, value):
+            raise ValueError('value is not in byte64 format')
+        return value.encode()
+
+
 class Like(BaseModel):
     user: OutUser
 
@@ -58,7 +74,7 @@ class Comment(BaseModel):
 
 class Post(BaseModel):
     user: OutUser
-    image: str  # base64
+    image: Base64
     comments: List[Comment]
     description: str
     likes: List[Like]
@@ -69,7 +85,7 @@ class Post(BaseModel):
 
 class InPost(BaseModel):
     user_id: int
-    image: str  # base 64
+    image: Base64  # base 64
     description: str
     marked_users_ids: List[int]
     location: str
