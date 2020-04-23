@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Any, Callable, Iterable, List
+from typing import Any, Callable, Iterable, List, Optional
 
 from pydantic import BaseModel
 
@@ -83,9 +83,13 @@ class Post(BaseModel):
     location: str
 
 
+class PostResponse(BaseModel):
+    status: str
+    task_id: str
+
+
 class InPost(BaseModel):
-    user_id: int
-    image: Base64  # base 64
+    image: bytes
     description: str
-    marked_users_ids: List[int]
-    location: str
+    marked_users_ids: Optional[List[int]] = None
+    location: Optional[str] = None

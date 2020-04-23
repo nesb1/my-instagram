@@ -23,6 +23,16 @@ class ImageStorageSettings(BaseSettings):
     storage_folder_name = 'image storage'
 
 
+class ImageCuttingSettings(BaseSettings):
+    aspect_resolution = 1080
+
+
+class RedisSettings(BaseSettings):
+    redis_address = 'redis'
+
+
+redis_settings = RedisSettings()
+image_cutting_settings = ImageCuttingSettings()
 image_storage_settings = ImageStorageSettings()
 app_settings = AppSettings()
 tokens_settings = TokensSettings()

@@ -9,3 +9,6 @@ class Message(Enum):
     ACCESS_TOKEN_OUTDATED = 'Access token outdated'
     INCORRECT_USERNAME_OR_PASSWORD = 'Incorrect username or password'
     INVALID_REFRESH_TOKEN = 'Invalid refresh token'
+    INVALID_IMAGE = 'Invalid image'
+    INCORRECTLY_MARKED_USERS = 'Nonexistent user is marked or one user repeated multiple times or marked himself'
+    POST_ACCEPTED_FOR_PROCESSING = 'Post accepted for processing'

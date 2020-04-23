@@ -4,3 +4,7 @@ class UsersDALError(Exception):
 
 class AuthDALError(Exception):
     pass
+
+
+class PostsDALError(Exception):
+    pass
