@@ -86,6 +86,8 @@ class Post(BaseModel):
 class PostResponse(BaseModel):
     status: str
     task_id: str
+    post_id: Optional[int] = None
+    error_text: Optional[str] = None
 
 
 class InPost(BaseModel):
@@ -93,3 +95,8 @@ class InPost(BaseModel):
     description: str
     marked_users_ids: Optional[List[int]] = None
     location: Optional[str] = None
+
+
+class WorkerResult(BaseModel):
+    post_id: Optional[int] = None
+    error: Optional[str] = None

@@ -25,7 +25,6 @@ def get_app() -> FastAPI:
         posts.router,
         prefix='/users/{user_id}/posts',
         tags=['posts'],
-        dependencies=[Depends(check_authorization)],
         responses={
             HTTPStatus.UNAUTHORIZED.value: {'model': ErrorMessage},
             HTTPStatus.BAD_REQUEST.value: {'model': ErrorMessage},

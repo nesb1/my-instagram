@@ -8,3 +8,7 @@ class AuthDALError(Exception):
 
 class PostsDALError(Exception):
     pass
+
+
+class MyImageError(Exception):
+    pass
