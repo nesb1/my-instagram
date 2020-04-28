@@ -75,5 +75,3 @@ reference/
 # database
 my.db
 
-# poetry
-poetry.lock

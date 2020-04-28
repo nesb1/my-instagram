@@ -31,6 +31,14 @@ class RedisSettings(BaseSettings):
     redis_address = 'redis'
 
 
+class DataBaseSettings(BaseSettings):
+    server_name = 'db'
+    user = 'evgeny'
+    password = '5211'
+    db_name = 'database'
+
+
+db_settings = DataBaseSettings()
 redis_settings = RedisSettings()
 image_cutting_settings = ImageCuttingSettings()
 image_storage_settings = ImageStorageSettings()

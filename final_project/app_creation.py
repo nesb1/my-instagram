@@ -1,15 +1,12 @@
 from http import HTTPStatus
 
-import uvicorn
 from fastapi import Depends, FastAPI
 from final_project.api import auth, post, posts, users
 from final_project.data_access_layer.auth import check_authorization
-from final_project.database.database import Base
 from final_project.models import ErrorMessage
 
 
 def get_app() -> FastAPI:
-    Base.metadata.create_all()
     _app = FastAPI()
     _app.include_router(
         post.router,
@@ -28,6 +25,7 @@ def get_app() -> FastAPI:
         responses={
             HTTPStatus.UNAUTHORIZED.value: {'model': ErrorMessage},
             HTTPStatus.BAD_REQUEST.value: {'model': ErrorMessage},
+            HTTPStatus.NOT_FOUND.value: {'model': ErrorMessage},
         },
     )
     _app.include_router(
@@ -43,8 +41,3 @@ def get_app() -> FastAPI:
         responses={HTTPStatus.UNAUTHORIZED.value: {'model': ErrorMessage}},
     )
     return _app
-
-
-app = get_app()
-if __name__ == '__main__':
-    uvicorn.run(app)

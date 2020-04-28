@@ -2,6 +2,7 @@ import re
 from datetime import datetime
 from typing import Any, Callable, Iterable, List, Optional
 
+from final_project.messages import Message
 from pydantic import BaseModel
 
 
@@ -55,6 +56,8 @@ class Base64(bytes):
     def validate(cls, value: Any) -> bytes:
         if value is None or not isinstance(value, str):
             raise ValueError(f'actual value type is {type(value)} but expected{str}',)
+        if len(value) % 4 != 0:
+            raise ValueError(Message.INVALID_BASE64_PADDING.value)
         pattern = re.compile('^[A-Za-z0-9+/]+={0,2}$')
         if not re.match(pattern, value):
             raise ValueError('value is not in byte64 format')
@@ -83,7 +86,7 @@ class Post(BaseModel):
     location: str
 
 
-class PostResponse(BaseModel):
+class TaskResponse(BaseModel):
     status: str
     task_id: str
     post_id: Optional[int] = None
@@ -91,7 +94,7 @@ class PostResponse(BaseModel):
 
 
 class InPost(BaseModel):
-    image: bytes
+    image: Base64
     description: str
     marked_users_ids: Optional[List[int]] = None
     location: Optional[str] = None

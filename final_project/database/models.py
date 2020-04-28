@@ -2,6 +2,13 @@ import sqlalchemy as sa
 import sqlalchemy.orm as so
 from final_project.database.database import Base
 
+association_table = sa.Table(
+    'association',
+    Base.metadata,
+    sa.Column('post.id', sa.Integer, sa.ForeignKey('user.id')),
+    sa.Column('user.id', sa.Integer, sa.ForeignKey('post.id')),
+)
+
 
 class User(Base):
     __tablename__ = 'user'
@@ -12,7 +19,9 @@ class User(Base):
     refresh_token = sa.Column(sa.String)
 
     posts = so.relationship('Post', back_populates=__tablename__, uselist=True)
-    marked_users = so.relationship('MarkedUser', back_populates=__tablename__)
+    marked_on_posts = so.relationship(
+        'Post', back_populates='marked_users', secondary=association_table
+    )
 
 
 class Post(Base):
@@ -26,15 +35,5 @@ class Post(Base):
 
     user = so.relationship(User, back_populates='posts')
     marked_users = so.relationship(
-        'MarkedUser', back_populates=__tablename__, uselist=True
+        User, back_populates='marked_on_posts', secondary=association_table
     )
-
-
-class MarkedUser(Base):
-    __tablename__ = 'marked_user'
-    id = sa.Column(sa.Integer, primary_key=True, index=True)
-    user_id = sa.Column(sa.Integer, sa.ForeignKey(User.id), nullable=False, index=True)
-    post_id = sa.Column(sa.Integer, sa.ForeignKey(Post.id), nullable=False, index=True)
-
-    user = so.relationship(User, back_populates='marked_users')
-    post = so.relationship(Post, back_populates='marked_users')

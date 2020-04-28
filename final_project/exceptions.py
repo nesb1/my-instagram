@@ -12,3 +12,7 @@ class PostsDALError(Exception):
 
 class MyImageError(Exception):
     pass
+
+
+class PostsDALNotExistsError(Exception):
+    pass

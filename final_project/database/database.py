@@ -1,28 +1,18 @@
 import asyncio
 import functools
-import pathlib
 import typing
 from typing import Any
 
-import sqlalchemy as sa
-from sqlalchemy import event
+from final_project.config import db_settings
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.util.compat import contextmanager
 
-cur_path = (pathlib.Path().parent.parent / 'my.db').resolve()
-DB_URL = 'sqlite:////' + str(cur_path)
-engine = sa.create_engine(DB_URL)
-
+engine = create_engine(
+    f'postgresql://{db_settings.user}:{db_settings.password}@{db_settings.server_name}/{db_settings.db_name}',
+)
 Base = declarative_base(bind=engine)
-
-
-def fk_pragma_on_connect(dbapi_con: Any, con_record: Any) -> None:
-    # pylint: disable=unused-argument
-    dbapi_con.execute('pragma foreign_keys=ON')
-
-
-event.listen(engine, 'connect', fk_pragma_on_connect)
 
 
 @contextmanager

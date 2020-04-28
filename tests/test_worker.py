@@ -5,7 +5,7 @@ import pytest
 from final_project.config import image_cutting_settings
 from final_project.data_access_layer.users import UsersDataAccessLayer
 from final_project.database.database import create_session
-from final_project.database.models import MarkedUser, Post
+from final_project.database.models import Post
 from final_project.image_processor.image import MyImage
 from final_project.image_processor.worker import Processor, process_image
 from final_project.messages import Message
@@ -47,7 +47,7 @@ def _mock_processor(mocker):
 def test_process_image_will_call_read_cut_and_save(
     in_post, mock_read_image, image_2x2, uuid
 ):
-    fake_image_bytes = b'123'
+    fake_image_bytes = '1234'
     in_post.image = fake_image_bytes
     user_id: int = 1
     process_image(user_id, in_post, uuid)
@@ -60,21 +60,21 @@ def post_id():
     return 1
 
 
-@pytest.mark.usefixtures('_mock_redis')
+@pytest.mark.usefixtures('_mock_sync_redis')
 def test_on_success_save_res_on_redis(uuid, post_id):
     Processor.on_success(uuid, post_id)
     Redis.hmset.assert_called_once_with(RedisKey.SOLVED_TASKS.value, {uuid: post_id})
     Redis.srem(RedisKey.TASKS_IN_PROGRESS.value, uuid)
 
 
-@pytest.mark.usefixtures('_mock_redis')
+@pytest.mark.usefixtures('_mock_sync_redis')
 def test_on_success_returns_expected_value(uuid, post_id):
     res = Processor.on_success(uuid, post_id)
     assert res.post_id == post_id
     assert res.error is None
 
 
-@pytest.mark.usefixtures('_mock_redis')
+@pytest.mark.usefixtures('_mock_sync_redis')
 def test_on_failure_save_data_to_redis(uuid):
     Processor.on_failure(uuid, Message.INVALID_IMAGE.value)
     Redis.hmset.assert_called_once_with(
@@ -83,7 +83,7 @@ def test_on_failure_save_data_to_redis(uuid):
     Redis.srem(RedisKey.TASKS_IN_PROGRESS.value, uuid)
 
 
-@pytest.mark.usefixtures('_mock_redis')
+@pytest.mark.usefixtures('_mock_sync_redis')
 def test_on_failure_returns_expected_value(uuid):
     res = Processor.on_failure(uuid, Message.INVALID_IMAGE.value)
     assert res.post_id is None
@@ -142,6 +142,7 @@ def test_process_add_marked_users_to_database(in_post, uuid):
     in_post.marked_users_ids = [2, 3]
     process_image(1, in_post, uuid)
     with create_session() as session:
-        records = session.query(MarkedUser).filter(MarkedUser.post_id == 1).all()
-        assert len(records) == 2
-        assert list(map(lambda record: record.user_id, records)) == [2, 3]
+        post = session.query(Post).filter(Post.id == 1).first()
+        marked_users = post.marked_users
+        assert len(marked_users) == 2
+        assert list(map(lambda user: user.id, marked_users)) == [2, 3]

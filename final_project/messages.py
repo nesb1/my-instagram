@@ -16,3 +16,5 @@ class Message(Enum):
     POST_TASK_FALLEN = 'Post task fallen'
     ACCESS_FORBIDDEN = 'access_forbidden'
     BYTES_ARE_NOT_A_IMAGE = 'Bytes are not a image'
+    INVALID_BASE64_PADDING = 'Invalid base64 padding'
+    TASK_NOT_EXISTS = 'Task not exists'

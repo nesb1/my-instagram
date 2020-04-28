@@ -1,16 +1,19 @@
+from binascii import Error
 from datetime import datetime
 from typing import List, Optional
 
 from final_project.config import image_cutting_settings, redis_settings
 from final_project.database.database import create_session
-from final_project.database.models import MarkedUser, Post
+from final_project.database.models import Post, User
 from final_project.exceptions import MyImageError
 from final_project.image_processor.image import MyImage
+from final_project.messages import Message
 from final_project.models import InPost, WorkerResult
 from final_project.redis_keys import RedisKey
+from final_project.utils import decode_base64_to_bytes
 from redis import Redis
 
-redis = Redis(host=redis_settings.redis_address)
+redis = Redis(redis_settings.redis_address)
 
 
 class Processor:
@@ -45,9 +48,11 @@ def _add_post_to_db(
 
 def _add_marked_users(ids: List[int], post_id: int) -> None:
     with create_session() as session:
+        post = session.query(Post).filter(Post.id == post_id).first()
         for id_ in ids:
-            mu = MarkedUser(user_id=id_, post_id=post_id)
-            session.add(mu)
+            user = session.query(User).filter(User.id == id_).first()
+            post.marked_users.append(user)
+        session.add(post)
 
 
 def process_image(user_id: int, post: InPost, task_id: str) -> WorkerResult:
@@ -56,7 +61,11 @@ def process_image(user_id: int, post: InPost, task_id: str) -> WorkerResult:
     и фиксирует путь к изображению в бд
     '''
     try:
-        image = MyImage(post.image)
+        bytes_ = decode_base64_to_bytes(post.image)
+    except Error:
+        return Processor.on_failure(task_id, Message.INVALID_BASE64_PADDING.value)
+    try:
+        image = MyImage(bytes_)
         image.cut(image_cutting_settings.aspect_resolution)
         image_path = image.save(user_id)
     except MyImageError as e:
@@ -70,3 +79,4 @@ def process_image(user_id: int, post: InPost, task_id: str) -> WorkerResult:
     ids = post.marked_users_ids
     if ids:
         _add_marked_users(ids, post_id)
+    Processor.on_success(task_id, post_id)

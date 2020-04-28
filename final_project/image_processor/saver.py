@@ -32,20 +32,19 @@ def _make_dir_if_not_exists(dir_path: Path, sub_dir_name: str) -> Path:
     return res
 
 
-def _get_path(user_id: int, format_: str) -> Path:
+def _get_path(user_id: int) -> Path:
     root = _get_project_root()
     grouping_ids = _get_name_for_grouping_id(user_id)
     grouping_ids_dir = _make_dir_if_not_exists(root, grouping_ids)
     id_dir = _make_dir_if_not_exists(grouping_ids_dir, str(user_id))
-    format_ = format_.lower()
-    return id_dir / f'{(uuid.uuid4())}.{format_}'
+    return id_dir / f'{(uuid.uuid4())}.png'
 
 
 def save_image(user_id: int, image: Image) -> Path:
     '''
-    Сохраняет изображение в хранилище
-    :return: Путь к изображению
-    '''
-    path = _get_path(user_id, image.format)
-    image.save(path)
+        Сохраняет изображение в хранилище
+        :return: Путь к изображению
+        '''
+    path = _get_path(user_id)
+    image.save(path, format='png')
     return path

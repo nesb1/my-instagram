@@ -27,7 +27,7 @@ format:
 	$(VENV)/bin/unify --in-place --recursive $(ALL)
 
 up: 
-	uvicorn $(CODE).main:app --host=0.0.0.0
+	uvicorn $(CODE).app:app --host=0.0.0.0
 
 
 

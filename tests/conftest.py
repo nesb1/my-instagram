@@ -1,25 +1,38 @@
 import pathlib
 
+import psycopg2
 import pytest
+import testing.postgresql
+from final_project.app_creation import get_app
 from final_project.data_access_layer.users import UsersDataAccessLayer
-from final_project.database.database import Base, engine
-from final_project.main import app
+from final_project.database import database
 from final_project.models import InPost, InUser
+from final_project.redis import RedisInstances
+from mock import AsyncMock
 from PIL.Image import open as open_to_image
 from redis import Redis
+from sqlalchemy import create_engine
 from starlette.testclient import TestClient
 
 
 @pytest.fixture()
 def client():
-    return TestClient(app)
+    return TestClient(get_app())
+
+
+@pytest.fixture(scope='session')
+def postgres():
+    return testing.postgresql.PostgresqlFactory(cache_initialized_db=True)
 
 
 @pytest.fixture(autouse=True)
-def _init_db():
-    Base.metadata.create_all(engine)
+def _init_db(postgres):
+    ps = postgres()
+    database.engine = create_engine(ps.url())
+    psycopg2.connect(**ps.dsn())
+    database.Base.metadata.create_all(database.engine)
     yield
-    Base.metadata.drop_all(engine)
+    database.Base.metadata.drop_all(database.engine)
 
 
 @pytest.fixture()
@@ -64,7 +77,7 @@ def image_2x2(resource_directory):
 
 
 @pytest.fixture()
-def _mock_redis(mocker):
+def _mock_sync_redis(mocker):
     mocker.patch.object(Redis, 'sadd')
     mocker.patch.object(Redis, 'hmset')
     mocker.patch.object(Redis, 'hmget')
@@ -72,8 +85,18 @@ def _mock_redis(mocker):
 
 
 @pytest.fixture()
+def _mock_async_redis(mocker):
+    mock = mocker.patch.object(RedisInstances, 'async_redis')
+    RedisInstances.async_redis = AsyncMock()
+    mock.sadd = AsyncMock()
+    mock.hmset = AsyncMock()
+    mock.hmget = AsyncMock()
+    mock.srem = AsyncMock()
+
+
+@pytest.fixture()
 def in_post():
-    return InPost(image=b'123', description='descr')
+    return InPost(image='1234', description='descr')
 
 
 @pytest.fixture()

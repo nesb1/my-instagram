@@ -9,3 +9,34 @@ services:
       network: host
     ports:
       - 8000:8000
+    depends_on:
+      - redis
+      - db
+
+  worker:
+    image: 'final_project'
+    command: 'rq worker --url redis://redis:6379'
+    depends_on:
+      - redis
+      - db
+
+
+  db:
+    image: 'postgres'
+    environment:
+      - POSTGRES_USER=evgeny
+      - POSTGRES_PASSWORD=5211
+      - POSTGRES_DB=database
+    ports:
+      - 5432:5432
+
+  redis:
+    image: 'bitnami/redis:5.0'
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    volumes:
+      - ./redis.conf:/opt/bitnami/redis/etc/redis.conf
+    ports:
+      - 6379:6379
