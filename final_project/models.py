@@ -54,6 +54,8 @@ class Base64(bytes):
 
     @classmethod
     def validate(cls, value: Any) -> bytes:
+        if isinstance(value, bytes):
+            value = value.decode()
         if value is None or not isinstance(value, str):
             raise ValueError(f'actual value type is {type(value)} but expected{str}',)
         if len(value) % 4 != 0:
@@ -77,13 +79,16 @@ class Comment(BaseModel):
 
 class Post(BaseModel):
     user: OutUser
-    image: Base64
     comments: List[Comment]
-    description: str
+    description: Optional[str] = None
     likes: List[Like]
     created_at: datetime
     marked_users: List[OutUser]
-    location: str
+    location: Optional[str] = None
+
+
+class PostWithImage(Post):
+    image: Base64
 
 
 class TaskResponse(BaseModel):
@@ -103,3 +108,11 @@ class InPost(BaseModel):
 class WorkerResult(BaseModel):
     post_id: Optional[int] = None
     error: Optional[str] = None
+
+
+class Image(BaseModel):
+    image: Base64
+
+
+class ImageWithPath(Image):
+    path: str

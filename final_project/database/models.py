@@ -2,11 +2,25 @@ import sqlalchemy as sa
 import sqlalchemy.orm as so
 from final_project.database.database import Base
 
-association_table = sa.Table(
-    'association',
+post_marked_users_association_table = sa.Table(
+    'post_marked_users_association',
     Base.metadata,
     sa.Column('post.id', sa.Integer, sa.ForeignKey('user.id')),
     sa.Column('user.id', sa.Integer, sa.ForeignKey('post.id')),
+)
+
+post_likes_association_table = sa.Table(
+    'post_likes_association',
+    Base.metadata,
+    sa.Column('post.id', sa.Integer, sa.ForeignKey('user.id')),
+    sa.Column('user.id', sa.Integer, sa.ForeignKey('post.id')),
+)
+
+post_comments_likes_association_table = sa.Table(
+    'post_comments_likes_association',
+    Base.metadata,
+    sa.Column('comment.id', sa.Integer, sa.ForeignKey('user.id')),
+    sa.Column('user.id', sa.Integer, sa.ForeignKey('comment.id')),
 )
 
 
@@ -20,8 +34,19 @@ class User(Base):
 
     posts = so.relationship('Post', back_populates=__tablename__, uselist=True)
     marked_on_posts = so.relationship(
-        'Post', back_populates='marked_users', secondary=association_table
+        'Post',
+        back_populates='marked_users',
+        secondary=post_marked_users_association_table,
     )
+    likes = so.relationship(
+        'Post', back_populates='likes', secondary=post_likes_association_table
+    )
+    comments_likes = so.relationship(
+        'Comment',
+        back_populates='likes',
+        secondary=post_comments_likes_association_table,
+    )
+    comments = so.relationship('Comment', back_populates='user', uselist=True)
 
 
 class Post(Base):
@@ -35,5 +60,28 @@ class Post(Base):
 
     user = so.relationship(User, back_populates='posts')
     marked_users = so.relationship(
-        User, back_populates='marked_on_posts', secondary=association_table
+        User,
+        back_populates='marked_on_posts',
+        secondary=post_marked_users_association_table,
     )
+    comments = so.relationship('Comment', back_populates='post')
+    likes = so.relationship(
+        User, back_populates='likes', secondary=post_likes_association_table
+    )
+
+
+class Comment(Base):
+    __tablename__ = 'comment'
+    id = sa.Column(sa.Integer, primary_key=True, index=True)
+    user_id = sa.Column(sa.Integer, sa.ForeignKey(User.id), nullable=False, index=True)
+    post_id = sa.Column(sa.Integer, sa.ForeignKey(Post.id), nullable=False, index=True)
+    text = sa.Column(sa.String)
+    created_at = sa.Column(sa.DateTime)
+
+    post = so.relationship(Post, back_populates='comments')
+    likes = so.relationship(
+        User,
+        back_populates='comments_likes',
+        secondary=post_comments_likes_association_table,
+    )
+    user = so.relationship(User, back_populates='comments')

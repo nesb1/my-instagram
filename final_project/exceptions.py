@@ -16,3 +16,11 @@ class MyImageError(Exception):
 
 class PostsDALNotExistsError(Exception):
     pass
+
+
+class PostDALNotExistsError(Exception):
+    pass
+
+
+class StorageDALNotExistsError(Exception):
+    pass

@@ -2,10 +2,12 @@ from typing import List, Optional
 from uuid import uuid4
 
 from final_project.data_access_layer.users import UsersDataAccessLayer
+from final_project.database.database import create_session
+from final_project.database.models import User
 from final_project.exceptions import PostsDALError, PostsDALNotExistsError
 from final_project.image_processor.worker import process_image
 from final_project.messages import Message
-from final_project.models import InPost, TaskResponse, WorkerResult
+from final_project.models import InPost, Post, TaskResponse, WorkerResult
 from final_project.redis import RedisInstances
 from final_project.redis_keys import RedisKey
 
@@ -15,7 +17,7 @@ class PostsDAL:
     async def add_post(user_id: int, post: InPost) -> TaskResponse:
         user = await UsersDataAccessLayer.get_user(user_id, without_error=True)
         if not user:
-            raise PostsDALError(Message.USER_DOES_NOT_EXISTS.value)
+            raise PostsDALNotExistsError(Message.USER_DOES_NOT_EXISTS.value)
         ids = post.marked_users_ids
         if ids is not None and (
             not await PostsDAL._are_marked_users_correct(ids) or user_id in ids
@@ -83,3 +85,13 @@ class PostsDAL:
                 task_id=task_id, status=Message.POST_ACCEPTED_FOR_PROCESSING.value
             )
         raise PostsDALNotExistsError(Message.TASK_NOT_EXISTS.value)
+
+    @staticmethod
+    async def get_posts(user_id: int) -> List[Post]:
+        with create_session() as session:
+            user = session.query(User).filter(User.id == user_id).first()
+            if not user:
+                raise PostsDALNotExistsError(Message.USER_DOES_NOT_EXISTS.value)
+            posts = user.posts
+            if not posts:
+                raise PostsDALNotExistsError(Message.POSTS_DO_NOT_EXIST.value)

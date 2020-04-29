@@ -27,13 +27,14 @@ def _mock_uuid4(mocker, uuid):
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures('_init_db')
 async def test_add_post_raises_error_if_user_does_not_exists(in_post):
-    with pytest.raises(PostsDALError):
+    with pytest.raises(PostsDALNotExistsError):
         await PostsDAL.add_post(1, in_post)
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('_add_user')
+@pytest.mark.usefixtures('_init_db', '_add_user')
 async def test_add_post_raises_error_if_marked_users_are_not_correct(in_post):
     in_post.marked_users_ids = [2, 3]
     with pytest.raises(PostsDALError):
@@ -41,7 +42,7 @@ async def test_add_post_raises_error_if_marked_users_are_not_correct(in_post):
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('_add_user', '_mock_redis_queue')
+@pytest.mark.usefixtures('_init_db', '_add_user', '_mock_redis_queue')
 async def test_add_post_raises_error_if_marked_himself(in_post):
     in_post.marked_users_ids = [1]
     with pytest.raises(PostsDALError):
@@ -50,7 +51,7 @@ async def test_add_post_raises_error_if_marked_himself(in_post):
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(
-    '_add_user', '_mock_redis_queue', '_mock_uuid4', '_mock_async_redis'
+    '_init_db', '_add_user', '_mock_redis_queue', '_mock_uuid4', '_mock_async_redis'
 )
 async def test_add_post_add_task_to_redis_queue(in_post, uuid):
     await PostsDAL.add_post(1, in_post)
@@ -59,7 +60,7 @@ async def test_add_post_add_task_to_redis_queue(in_post, uuid):
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(
-    '_add_user', '_mock_redis_queue', '_mock_uuid4', '_mock_async_redis'
+    '_init_db', '_add_user', '_mock_redis_queue', '_mock_uuid4', '_mock_async_redis'
 )
 async def test_add_post_add_task_to_redis_as_processing(in_post, uuid):
     await PostsDAL.add_post(1, in_post)
@@ -70,7 +71,7 @@ async def test_add_post_add_task_to_redis_as_processing(in_post, uuid):
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(
-    '_add_user', '_mock_redis_queue', '_mock_async_redis', '_mock_uuid4'
+    '_init_db', '_add_user', '_mock_redis_queue', '_mock_async_redis', '_mock_uuid4'
 )
 async def test_add_post_add_task_return_expected_value(in_post, uuid):
     res = await PostsDAL.add_post(1, in_post)
@@ -79,7 +80,7 @@ async def test_add_post_add_task_return_expected_value(in_post, uuid):
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('_mock_async_redis')
+@pytest.mark.usefixtures('_init_db', '_mock_async_redis')
 async def test_get_task_status_when_task_solved(async_redis):
     task_id = '123'
     async_redis.hmget.return_value = [b'1']
@@ -90,7 +91,7 @@ async def test_get_task_status_when_task_solved(async_redis):
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('_mock_async_redis')
+@pytest.mark.usefixtures('_init_db', '_mock_async_redis')
 async def test_get_task_status_when_task_fallen(async_redis):
     task_id = '123'
     async_redis.hmget.side_effect = [[None], [Message.INVALID_IMAGE.value.encode()]]
@@ -100,7 +101,7 @@ async def test_get_task_status_when_task_fallen(async_redis):
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('_mock_async_redis')
+@pytest.mark.usefixtures('_init_db', '_mock_async_redis')
 async def test_get_task_status_when_task_not_processed_yet(async_redis):
     task_id = '123'
     async_redis.hmget.side_effect = [[None], [None]]
@@ -110,10 +111,24 @@ async def test_get_task_status_when_task_not_processed_yet(async_redis):
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('_mock_async_redis')
+@pytest.mark.usefixtures('_init_db', '_mock_async_redis')
 async def test_get_task_status_when_task_not_exists(async_redis):
     task_id = '123'
     async_redis.hmget.side_effect = [[None], [None]]
     async_redis.sismember.return_value = 0
     with pytest.raises(PostsDALNotExistsError):
         await PostsDAL.get_task_status(task_id)
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('_init_db', '_add_user')
+async def test_get_posts_when_user_does_not_have_posts():
+    with pytest.raises(PostsDALNotExistsError):
+        await PostsDAL.get_posts(1)
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('_init_db')
+async def test_get_posts_when_user_does_not_exists():
+    with pytest.raises(PostsDALNotExistsError):
+        await PostsDAL.get_posts(1)

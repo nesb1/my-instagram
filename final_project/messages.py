@@ -18,3 +18,7 @@ class Message(Enum):
     BYTES_ARE_NOT_A_IMAGE = 'Bytes are not a image'
     INVALID_BASE64_PADDING = 'Invalid base64 padding'
     TASK_NOT_EXISTS = 'Task not exists'
+    POST_NOT_EXISTS = 'Post not exists'
+    POSTS_DO_NOT_EXIST = 'Posts do not exist'
+    IMAGE_DOES_NOT_EXISTS_ON_STORAGE = 'Image does not exists on storage'
+    USER_DOES_NOT_HAVE_IMAGES = 'User does not have images'

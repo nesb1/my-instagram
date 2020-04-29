@@ -19,6 +19,7 @@ RUN apt-get update \
         libpq-dev \
         make \
  && rm -rf /var/lib/apt/lists/*
+COPY ./final_project /code/final_project
 
 COPY pyproject.toml poetry.lock /code/
 
@@ -30,7 +31,7 @@ RUN pip install --no-compile --upgrade pip \
 
 COPY Makefile /code/
 
-COPY ./final_project /code/final_project
+
 
 ENTRYPOINT [""]
 CMD ["make", "up"]

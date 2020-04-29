@@ -25,7 +25,7 @@ def postgres():
     return testing.postgresql.PostgresqlFactory(cache_initialized_db=True)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def _init_db(postgres):
     ps = postgres()
     database.engine = create_engine(ps.url())
@@ -72,8 +72,19 @@ def image_in_bytes(request, resource_directory: pathlib.Path):
 
 
 @pytest.fixture()
+def image_2x2_in_bytes(resource_directory):
+    with (resource_directory / '2x2.png').open('rb') as f:
+        return f.read()
+
+
+@pytest.fixture()
 def image_2x2(resource_directory):
     return open_to_image(resource_directory / '2x2.png')
+
+
+@pytest.fixture()
+def image_1x1(resource_directory):
+    return open_to_image(resource_directory / '1x1.png')
 
 
 @pytest.fixture()

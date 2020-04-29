@@ -2,8 +2,8 @@ from io import BytesIO
 from pathlib import Path
 
 from final_project.exceptions import MyImageError
-from final_project.image_processor.saver import save_image
 from final_project.messages import Message
+from final_project.utils import encode_bytes_to_base64
 from PIL import UnidentifiedImageError
 from PIL.Image import Image
 from PIL.Image import open as open_image
@@ -60,4 +60,6 @@ class MyImage:
         return self.image
 
     def save(self, user_id: int) -> Path:
-        return save_image(user_id, self.image)
+        # делает запрос на сервер
+        image = encode_bytes_to_base64(self.image.tobytes())
+        # return save_image(user_id, self.image)

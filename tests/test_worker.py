@@ -43,7 +43,9 @@ def _mock_processor(mocker):
     mocker.patch.object(Processor, 'on_failure')
 
 
-@pytest.mark.usefixtures('_add_user', '_mock_cut', '_mock_save', '_mock_processor')
+@pytest.mark.usefixtures(
+    '_init_db', '_add_user', '_mock_cut', '_mock_save', '_mock_processor'
+)
 def test_process_image_will_call_read_cut_and_save(
     in_post, mock_read_image, image_2x2, uuid
 ):
@@ -60,21 +62,21 @@ def post_id():
     return 1
 
 
-@pytest.mark.usefixtures('_mock_sync_redis')
+@pytest.mark.usefixtures('_init_db', '_mock_sync_redis')
 def test_on_success_save_res_on_redis(uuid, post_id):
     Processor.on_success(uuid, post_id)
     Redis.hmset.assert_called_once_with(RedisKey.SOLVED_TASKS.value, {uuid: post_id})
     Redis.srem(RedisKey.TASKS_IN_PROGRESS.value, uuid)
 
 
-@pytest.mark.usefixtures('_mock_sync_redis')
+@pytest.mark.usefixtures('_init_db', '_mock_sync_redis')
 def test_on_success_returns_expected_value(uuid, post_id):
     res = Processor.on_success(uuid, post_id)
     assert res.post_id == post_id
     assert res.error is None
 
 
-@pytest.mark.usefixtures('_mock_sync_redis')
+@pytest.mark.usefixtures('_init_db', '_mock_sync_redis')
 def test_on_failure_save_data_to_redis(uuid):
     Processor.on_failure(uuid, Message.INVALID_IMAGE.value)
     Redis.hmset.assert_called_once_with(
@@ -83,7 +85,7 @@ def test_on_failure_save_data_to_redis(uuid):
     Redis.srem(RedisKey.TASKS_IN_PROGRESS.value, uuid)
 
 
-@pytest.mark.usefixtures('_mock_sync_redis')
+@pytest.mark.usefixtures('_init_db', '_mock_sync_redis')
 def test_on_failure_returns_expected_value(uuid):
     res = Processor.on_failure(uuid, Message.INVALID_IMAGE.value)
     assert res.post_id is None
@@ -101,6 +103,7 @@ def mocked_datetime(mocker):
 
 
 @pytest.mark.usefixtures(
+    '_init_db',
     '_add_user',
     '_mock_cut',
     '_mock_save',
@@ -131,6 +134,7 @@ async def _add_2_users(in_user):
 
 
 @pytest.mark.usefixtures(
+    '_init_db',
     '_add_user',
     '_add_2_users',
     '_mock_cut',

@@ -13,6 +13,12 @@ services:
       - redis
       - db
 
+  storage:
+    image: 'final_project'
+    command: 'start_storage_service'
+    ports:
+      - 8001:8001
+
   worker:
     image: 'final_project'
     command: 'rq worker --url redis://redis:6379'
@@ -29,6 +35,8 @@ services:
       - POSTGRES_DB=database
     ports:
       - 5432:5432
+
+
 
   redis:
     image: 'bitnami/redis:5.0'

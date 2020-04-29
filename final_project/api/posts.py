@@ -43,6 +43,10 @@ async def add_post(
         return JSONResponse(
             status_code=HTTPStatus.BAD_REQUEST.value, content={'message': str(e)}
         )
+    except PostsDALNotExistsError as e:
+        return JSONResponse(
+            status_code=HTTPStatus.NOT_FOUND.value, content={'message': str(e)}
+        )
 
 
 @router.get('/task/{task_id}/', response_model=TaskResponse)
@@ -50,4 +54,6 @@ async def get_task_status(task_id: str) -> Any:
     try:
         return await PostsDAL.get_task_status(task_id)
     except PostsDALNotExistsError as e:
-        return JSONResponse(status_code=HTTPStatus.NOT_FOUND.value, content=str(e))
+        return JSONResponse(
+            status_code=HTTPStatus.NOT_FOUND.value, content={'message': str(e)}
+        )

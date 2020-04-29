@@ -2,7 +2,10 @@ from http import HTTPStatus
 from typing import Any
 
 from fastapi import APIRouter, Depends
+from final_project.data_access_layer.post import PostDAL
+from final_project.exceptions import PostDALNotExistsError
 from final_project.models import Comment, Post
+from starlette.responses import JSONResponse
 
 router = APIRouter()
 
@@ -18,6 +21,10 @@ async def get_post(commons: CommonPathParams = Depends(CommonPathParams)) -> Any
     '''
     Возвращает запись
     '''
+    try:
+        return await PostDAL.get_post(post_id=commons.post_id)
+    except PostDALNotExistsError as e:
+        return JSONResponse({'message': str(e)}, HTTPStatus.NOT_FOUND.value)
 
 
 @router.post('/likes', response_model=Post, status_code=HTTPStatus.CREATED.value)

@@ -34,7 +34,9 @@ async def tokens(username, password):
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('_add_user')
+@pytest.mark.usefixtures(
+    '_init_db', '_add_user',
+)
 async def test_get_tokens_with_valid_username_and_password(username, password, tokens):
     assert tokens.refresh_token
     assert tokens.access_token
@@ -42,6 +44,7 @@ async def test_get_tokens_with_valid_username_and_password(username, password, t
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures('_init_db')
 async def test_get_tokens_with_invalid_username_and_password_raises_error(
     username, password
 ):
@@ -50,7 +53,7 @@ async def test_get_tokens_with_invalid_username_and_password_raises_error(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('_add_user', '_mock_utc_now')
+@pytest.mark.usefixtures('_init_db', '_add_user', '_mock_utc_now')
 async def test_get_tokens_generates_new_token_pair_for_new_authorization(
     username, password, tokens
 ):
@@ -59,7 +62,7 @@ async def test_get_tokens_generates_new_token_pair_for_new_authorization(
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('_add_user')
+@pytest.mark.usefixtures('_init_db', '_add_user')
 async def test_get_tokens_save_tokens_to_db(username, password, tokens):
     with create_session() as session:
         user = session.query(User).filter(User.username == username).first()
@@ -68,14 +71,14 @@ async def test_get_tokens_save_tokens_to_db(username, password, tokens):
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('_add_user')
+@pytest.mark.usefixtures('_init_db', '_add_user')
 async def test_auth_will_let_enter_authentic_user(username, password, tokens):
     user = await check_authorization(tokens.access_token.decode())
     assert user
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('_add_user', '_mock_utc_now')
+@pytest.mark.usefixtures('_init_db', '_add_user', '_mock_utc_now')
 async def test_get_tokens_generates_new_token_pair_for_new_authorization_and_old_access_token_will_not_valid(
     username, password, tokens
 ):
@@ -87,14 +90,14 @@ async def test_get_tokens_generates_new_token_pair_for_new_authorization_and_old
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('_add_user', '_mock_utc_now')
+@pytest.mark.usefixtures('_init_db', '_add_user', '_mock_utc_now')
 async def test_refresh_tokens_returns_new_tokens_pair(username, password, tokens):
     new_tokens = await refresh_tokens(tokens.refresh_token.decode())
     assert new_tokens != tokens
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('_add_user', '_mock_utc_now')
+@pytest.mark.usefixtures('_init_db', '_add_user', '_mock_utc_now')
 async def test_refresh_tokens_saves_new_tokens_pair_to_db(username, password, tokens):
     new_tokens = await refresh_tokens(tokens.refresh_token.decode())
     with create_session() as session:
@@ -104,7 +107,7 @@ async def test_refresh_tokens_saves_new_tokens_pair_to_db(username, password, to
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('_add_user')
+@pytest.mark.usefixtures('_init_db', '_add_user')
 async def test_refresh_tokens_with_invalid_refresh_token():
     invalid_token = '123'
     with pytest.raises(AuthDALError):
@@ -112,7 +115,7 @@ async def test_refresh_tokens_with_invalid_refresh_token():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('_add_user', '_mock_utc_now')
+@pytest.mark.usefixtures('_init_db', '_add_user', '_mock_utc_now')
 async def test_refresh_with_old_refresh_token_raises_error(username, password, tokens):
     await refresh_tokens(tokens.refresh_token.decode())
     with pytest.raises(AuthDALError):
@@ -120,7 +123,7 @@ async def test_refresh_with_old_refresh_token_raises_error(username, password, t
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('_add_user')
+@pytest.mark.usefixtures('_init_db', '_add_user')
 async def test_generate_tokens_with_invalid_password(username):
     with pytest.raises(AuthDALError):
         await generate_tokens(username, '2')
