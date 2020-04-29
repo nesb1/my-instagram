@@ -30,6 +30,7 @@ aioredis = "^1.3.1"
 rq = "^1.3.0"
 "testing.postgresql" = "^1.3.0"
 psycopg2 = "^2.8.5"
+aiohttp = "^3.6.2"
 
 [tool.poetry.dev-dependencies]
 

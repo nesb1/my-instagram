@@ -38,8 +38,8 @@ class TokensResponse(BaseModel):
         if not isinstance(other, TokensResponse):
             return True
         return (
-            self.access_token == other.access_token
-            and self.refresh_token == other.refresh_token
+                self.access_token == other.access_token
+                and self.refresh_token == other.refresh_token
         )
 
 
@@ -57,7 +57,7 @@ class Base64(bytes):
         if isinstance(value, bytes):
             value = value.decode()
         if value is None or not isinstance(value, str):
-            raise ValueError(f'actual value type is {type(value)} but expected{str}',)
+            raise ValueError(f'actual value type is {type(value)} but expected{str}', )
         if len(value) % 4 != 0:
             raise ValueError(Message.INVALID_BASE64_PADDING.value)
         pattern = re.compile('^[A-Za-z0-9+/]+={0,2}$')
@@ -116,3 +116,12 @@ class Image(BaseModel):
 
 class ImageWithPath(Image):
     path: str
+
+
+class ImagePath(BaseModel):
+    path: str
+
+
+class ImageIn(BaseModel):
+    user_id: int
+    image: Base64

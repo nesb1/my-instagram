@@ -1,3 +1,5 @@
+
+
 class UsersDALError(Exception):
     pass
 
@@ -24,3 +26,14 @@ class PostDALNotExistsError(Exception):
 
 class StorageDALNotExistsError(Exception):
     pass
+
+
+class StorageClientError(Exception):
+    def __init__(self, status_code: int, message: str):
+        super().__init__(message)
+        self.status_code: int = status_code
+
+
+class StorageError(Exception):
+    pass
+

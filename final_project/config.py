@@ -20,7 +20,9 @@ class AppSettings(BaseSettings):
 
 class ImageStorageSettings(BaseSettings):
     items_in_one_folder = 1000
-    storage_folder_name = 'image storage'
+    storage_folder_name = 'image-storage'
+    address: str = 'localhost'
+    port: int = 8001
 
 
 class ImageCuttingSettings(BaseSettings):
