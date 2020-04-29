@@ -19,7 +19,7 @@ RUN apt-get update \
         libpq-dev \
         make \
  && rm -rf /var/lib/apt/lists/*
-COPY ./final_project /code/final_project
+
 
 COPY pyproject.toml poetry.lock /code/
 
@@ -28,6 +28,14 @@ RUN pip install --no-compile --upgrade pip \
  && poetry config virtualenvs.create false \
  && poetry install --no-dev --no-interaction --no-ansi \
  && pip uninstall --yes poetry 
+
+COPY ./final_project /code/final_project
+
+RUN pip install --no-compile poetry && poetry config virtualenvs.create false \
+ && poetry install --no-dev --no-interaction --no-ansi \
+ && pip uninstall --yes poetry
+
+
 
 COPY Makefile /code/
 

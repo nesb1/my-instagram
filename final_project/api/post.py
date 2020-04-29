@@ -4,7 +4,7 @@ from typing import Any
 from fastapi import APIRouter, Depends
 from final_project.data_access_layer.post import PostDAL
 from final_project.exceptions import PostDALNotExistsError
-from final_project.models import Comment, Post
+from final_project.models import Comment, Post, PostWithImage
 from starlette.responses import JSONResponse
 
 router = APIRouter()
@@ -16,7 +16,7 @@ class CommonPathParams:
         self.post_id = post_id
 
 
-@router.get('/', response_model=Post)
+@router.get('/', response_model=PostWithImage)
 async def get_post(commons: CommonPathParams = Depends(CommonPathParams)) -> Any:
     '''
     Возвращает запись

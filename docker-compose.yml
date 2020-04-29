@@ -1,14 +1,19 @@
 version: '2.4'
+networks:
+  kek:
+    driver: bridge
 
 services:
   code:
     image: "final_project"
+    container_name: main_api
     build:
       context: .
       dockerfile: Dockerfile
-      network: host
     ports:
       - 8000:8000
+    networks:
+      - kek
     depends_on:
       - redis
       - db
@@ -16,12 +21,17 @@ services:
   storage:
     image: 'final_project'
     command: 'start_storage_service'
+    container_name: storage
+    networks:
+      - kek
     ports:
       - 8001:8001
 
   worker:
     image: 'final_project'
     command: 'rq worker --url redis://redis:6379'
+    networks:
+      - kek
     depends_on:
       - redis
       - db
@@ -33,6 +43,8 @@ services:
       - POSTGRES_USER=evgeny
       - POSTGRES_PASSWORD=5211
       - POSTGRES_DB=database
+    networks:
+      - kek
     ports:
       - 5432:5432
 
@@ -48,3 +60,5 @@ services:
       - ./redis.conf:/opt/bitnami/redis/etc/redis.conf
     ports:
       - 6379:6379
+    networks:
+      - kek

@@ -1,5 +1,3 @@
-
-
 class UsersDALError(Exception):
     pass
 
@@ -36,4 +34,3 @@ class StorageClientError(Exception):
 
 class StorageError(Exception):
     pass
-

@@ -1,11 +1,12 @@
 from binascii import Error
 from datetime import datetime
+from time import sleep
 from typing import List, Optional
 
 from final_project.config import image_cutting_settings, redis_settings
 from final_project.database.database import create_session
 from final_project.database.models import Post, User
-from final_project.exceptions import MyImageError
+from final_project.exceptions import MyImageError, StorageError
 from final_project.image_processor.image import MyImage
 from final_project.messages import Message
 from final_project.models import InPost, WorkerResult
@@ -31,7 +32,7 @@ class Processor:
 
 
 def _add_post_to_db(
-    user_id: int, image_path: str, description: str, location: Optional[str]
+        user_id: int, image_path: str, description: str, location: Optional[str]
 ) -> int:
     with create_session() as session:
         post = Post(
@@ -68,11 +69,11 @@ def process_image(user_id: int, post: InPost, task_id: str) -> WorkerResult:
         image = MyImage(bytes_)
         image.cut(image_cutting_settings.aspect_resolution)
         image_path = image.save(user_id)
-    except MyImageError as e:
+    except (MyImageError, StorageError) as e:
         return Processor.on_failure(task_id, str(e))
     post_id = _add_post_to_db(
         user_id=user_id,
-        image_path=str(image_path),
+        image_path=image_path,
         description=post.description,
         location=post.location,
     )

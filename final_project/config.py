@@ -21,12 +21,13 @@ class AppSettings(BaseSettings):
 class ImageStorageSettings(BaseSettings):
     items_in_one_folder = 1000
     storage_folder_name = 'image-storage'
-    address: str = 'localhost'
+    address: str = 'storage'
     port: int = 8001
+    image_format: str = 'png'
 
 
 class ImageCuttingSettings(BaseSettings):
-    aspect_resolution = 1080
+    aspect_resolution = 10
 
 
 class RedisSettings(BaseSettings):

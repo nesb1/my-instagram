@@ -1,13 +1,14 @@
 from io import BytesIO
 from pathlib import Path
 
+from final_project.config import image_storage_settings
 from final_project.exceptions import MyImageError
 from final_project.messages import Message
 from final_project.utils import encode_bytes_to_base64
 from PIL import UnidentifiedImageError
 from PIL.Image import Image
 from PIL.Image import open as open_image
-
+from final_project.storage_client import save_image_to_storage
 
 class MyImage:
     def __init__(self, image: bytes) -> None:
@@ -59,7 +60,8 @@ class MyImage:
         self.image = MyImage._crop_image(self.image, aspect_resolution)
         return self.image
 
-    def save(self, user_id: int) -> Path:
-        # делает запрос на сервер
-        image = encode_bytes_to_base64(self.image.tobytes())
-        # return save_image(user_id, self.image)
+    def save(self, user_id: int) -> str:
+        bytes_ = BytesIO()
+        self.image.save(bytes_, image_storage_settings.image_format)
+        image = encode_bytes_to_base64(bytes_.getvalue())
+        return save_image_to_storage(image, user_id)
