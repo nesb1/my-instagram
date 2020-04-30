@@ -27,7 +27,7 @@ async def _get_user_from_db(user_id: int) -> UserWithTokens:
     )
     if not user:
         raise AuthDALError(Message.USER_DOES_NOT_EXISTS.value)
-    return user
+    return user  # type: ignore
 
 
 def _get_user_id(token: str) -> int:
@@ -73,7 +73,7 @@ def _authenticate_user(username: str, password: str) -> Awaitable[OutUser]:
     if user is None:
         raise AuthDALError(message)
     if _is_password_correct(password, user.password_hash):
-        return OutUser.from_orm(user)
+        return OutUser.from_orm(user)  # type: ignore
     raise AuthDALError(message)
 
 
@@ -88,10 +88,10 @@ def _save_tokens_to_db(
     user: OutUser, access_token: bytes, refresh_token: bytes
 ) -> None:
     with create_session() as session:
-        user = session.query(User).filter(User.id == user.id).one()
-        user.refresh_token = refresh_token.decode()
-        user.access_token = access_token.decode()
-        session.add(user)
+        user_from_db = session.query(User).filter(User.id == user.id).one()
+        user_from_db.refresh_token = refresh_token.decode()
+        user_from_db.access_token = access_token.decode()
+        session.add(user_from_db)
 
 
 async def _create_tokens(user: OutUser) -> TokensResponse:

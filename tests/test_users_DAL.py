@@ -3,7 +3,10 @@ from final_project.data_access_layer.users import UsersDataAccessLayer
 from final_project.database.database import create_session
 from final_project.database.models import User
 from final_project.exceptions import UsersDALDoesNotExistsError, UsersDALError
+from final_project.image_processor.worker import _add_post_to_db
+from final_project.models import ImageWithPath
 from final_project.password import get_password_hash
+from mock import AsyncMock
 
 
 @pytest.mark.asyncio
@@ -173,3 +176,102 @@ async def test_get_user_by_id():
 async def test_get_user_by_id_if_user_does_not_exists():
     with pytest.raises(UsersDALDoesNotExistsError):
         await UsersDataAccessLayer.get_user_by_id(1)
+
+
+@pytest.fixture()
+def post_adding_commons():
+    return '1', '1', '1'
+
+
+@pytest.fixture()
+def _add_post_from_second_user(post_adding_commons):
+    _add_post_to_db(2, *post_adding_commons)
+
+
+@pytest.fixture()
+def _add_post_from_third_user(post_adding_commons):
+    _add_post_to_db(3, *post_adding_commons)
+
+
+@pytest.fixture()
+def _mock_storage_client(mocker):
+    mocker.patch(
+        'final_project.data_access_layer.users.storage_client'
+    ).get_images = AsyncMock()
+
+
+@pytest.fixture()
+def mock_join_posts_with_image(mocker):
+    return mocker.patch(
+        'final_project.data_access_layer.users.utils.join_posts_with_images'
+    )
+
+
+@pytest.fixture()
+def image_with_path(base64_2x2_image):
+    return ImageWithPath(image=base64_2x2_image, path='1')
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('_init_db', '_add_user', '_mock_storage_client')
+async def test_get_feed_when_feed_clear():
+    res = await UsersDataAccessLayer.get_feed(1, 1, 10)
+    assert len(res) == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('_init_db', '_add_user', '_add_post')
+async def test_get_feed_when_user_add_post():
+    res = await UsersDataAccessLayer.get_feed_posts_with_paths(1, 1, 10)
+    assert len(res) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(
+    '_init_db', '_add_user', '_add_second_user', '_add_post_from_second_user'
+)
+async def test_get_feed_when_subscription_add_post(image_with_path):
+    await UsersDataAccessLayer.subscribe(1, 2)
+    res = await UsersDataAccessLayer.get_feed_posts_with_paths(1, 1, 10)
+    assert len(res) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(
+    '_init_db',
+    '_add_user',
+    '_add_second_user',
+    '_add_third_user',
+    '_add_post_from_second_user',
+    '_add_post_from_third_user',
+)
+async def test_get_feed_when_two_subscriptions_add_post(image_with_path):
+    await UsersDataAccessLayer.subscribe(1, 2)
+    await UsersDataAccessLayer.subscribe(1, 3)
+    res = await UsersDataAccessLayer.get_feed_posts_with_paths(1, 1, 10)
+    assert len(res) == 2
+    res_copy = res.copy()
+    res_copy.sort(key=lambda post: post.created_at)
+    assert res_copy == res
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(
+    '_init_db',
+    '_add_user',
+    '_add_post',
+    '_add_second_user',
+    '_add_third_user',
+    '_add_post_from_second_user',
+    '_add_post_from_third_user',
+)
+async def test_get_feed_when_two_subscriptions_add_post_and_user_add_post_too(
+    image_with_path,
+):
+    await UsersDataAccessLayer.subscribe(1, 2)
+    await UsersDataAccessLayer.subscribe(1, 3)
+    res = await UsersDataAccessLayer.get_feed_posts_with_paths(1, 1, 10)
+    assert len(res) == 3
+    res_copy = res.copy()
+    res_copy.sort(key=lambda post: post.created_at)
+    assert res_copy == res

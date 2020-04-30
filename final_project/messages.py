@@ -10,7 +10,8 @@ class Message(Enum):
     INCORRECT_USERNAME_OR_PASSWORD = 'Incorrect username or password'
     INVALID_REFRESH_TOKEN = 'Invalid refresh token'
     INVALID_IMAGE = 'Invalid image'
-    INCORRECTLY_MARKED_USERS = 'Nonexistent user is marked or one user repeated multiple times or marked himself'
+    INCORRECTLY_MARKED_USERS = 'Nonexistent user is marked or one user repeated \
+    multiple times or marked himself'
     POST_ACCEPTED_FOR_PROCESSING = 'Post accepted for processing'
     POST_READY = 'Post ready'
     POST_TASK_FALLEN = 'Post task fallen'
@@ -28,3 +29,4 @@ class Message(Enum):
     USER_CANNOT_UNSUBSCRIBE_FROM_HIMSELF = 'User cannot unsubscribe from himself'
     USER_ALREADY_SUBSCRIBED_ON_THIS_USER = 'User already subscribed on this user'
     USER_NOT_SUBSCRIBED_ON_THIS_USER = 'User not subscribed on this user'
+    INVALID_PAGINATION_PARAMS = 'Invalid page or size params'

@@ -1,11 +1,25 @@
 from typing import Awaitable, List, Union
 
+from final_project import storage_client, utils
 from final_project.data_access_layer.serialization import serialize
 from final_project.database.database import create_session, run_in_threadpool
+from final_project.database.models import Post as DB_Post
 from final_project.database.models import User
-from final_project.exceptions import UsersDALDoesNotExistsError, UsersDALError
+from final_project.exceptions import (
+    PaginationError,
+    UsersDALDoesNotExistsError,
+    UsersDALError,
+)
 from final_project.messages import Message
-from final_project.models import InUser, OutUser, UserInDetailOut, UserWithTokens
+from final_project.models import (
+    ImagePath,
+    InUser,
+    OutUser,
+    PostWithImage,
+    PostWithImagePath,
+    UserInDetailOut,
+    UserWithTokens,
+)
 from final_project.password import get_password_hash
 from sqlalchemy.orm import Session
 
@@ -28,7 +42,7 @@ class UsersDataAccessLayer:
             )
             session.add(new_user)
             session.flush()
-            return OutUser.from_orm(new_user)
+            return OutUser.from_orm(new_user)  # type: ignore
 
     @staticmethod
     async def get_user(
@@ -53,9 +67,10 @@ class UsersDataAccessLayer:
         return user
 
     @staticmethod
-    def _is_user_subscribed_on_another_user(user: User, subscriptions: List[User]):
-        l = list(map(lambda u: u.id, subscriptions))
-        return user.id in l
+    def _is_user_subscribed_on_another_user(
+        user: User, subscriptions: List[User]
+    ) -> bool:
+        return user.id in list(map(lambda u: u.id, subscriptions))
 
     @staticmethod
     async def subscribe(
@@ -111,10 +126,45 @@ class UsersDataAccessLayer:
     ) -> Awaitable[List[UserInDetailOut]]:
         with create_session() as session:
             res = session.query(User).filter(User.username.contains(substring)).all()
-            return [serialize(user) for user in res]
+            return [serialize(user) for user in res]  # type: ignore
 
     @staticmethod
     async def get_user_by_id(user_id: int) -> UserInDetailOut:
         with create_session() as session:
             user = await UsersDataAccessLayer._get_user(user_id, session)
-            return serialize(user)
+            return serialize(user)  # type: ignore
+
+    @staticmethod
+    def _get_sorted_posts_of_all_subscriptions(user: User) -> List[DB_Post]:
+        res = list(user.posts)
+        for subscription in user.subscriptions:
+            res.extend(subscription.posts)
+        res.sort(key=lambda post: post.created_at)
+        return res
+
+    @staticmethod
+    async def get_feed(user_id: int, page: int, size: int) -> List[PostWithImage]:
+        posts = await UsersDataAccessLayer.get_feed_posts_with_paths(
+            user_id, page, size
+        )
+        images = await storage_client.get_images(
+            list(map(lambda p: ImagePath(path=p.image_path), posts))
+        )
+        return utils.join_posts_with_images(posts, images)
+
+    @staticmethod
+    async def get_feed_posts_with_paths(
+        user_id: int, page: int, size: int
+    ) -> List[PostWithImagePath]:
+        with create_session() as session:
+            user = await UsersDataAccessLayer._get_user(user_id, session)
+            posts = UsersDataAccessLayer._get_sorted_posts_of_all_subscriptions(user)
+            if posts:
+                try:
+                    return [
+                        PostWithImagePath.from_orm(p)
+                        for p in utils.get_pagination(posts, page, size)
+                    ]
+                except PaginationError as e:
+                    raise UsersDALError(str(e))
+            return []

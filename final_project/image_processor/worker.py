@@ -79,4 +79,4 @@ def process_image(user_id: int, post: InPost, task_id: str) -> WorkerResult:
     ids = post.marked_users_ids
     if ids:
         _add_marked_users(ids, post_id)
-    Processor.on_success(task_id, post_id)
+    return Processor.on_success(task_id, post_id)

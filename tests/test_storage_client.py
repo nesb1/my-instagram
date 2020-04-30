@@ -3,7 +3,7 @@ from http import HTTPStatus
 import pytest
 from final_project.exceptions import StorageClientError, StorageError
 from final_project.messages import Message
-from final_project.models import Image, ImageWithPath
+from final_project.models import ImageWithPath
 from final_project.storage_client import (
     get_all_user_images,
     get_image_from_storage_async,
@@ -20,7 +20,9 @@ def mock_get_image_from_storage_async(mocker):
 async def test_get_image_from_storage_returns_image_when_success_async(
     mock_get_image_from_storage_async, base64_2x2_image
 ):
-    mock_get_image_from_storage_async.return_value = Image(image=base64_2x2_image)
+    mock_get_image_from_storage_async.return_value = ImageWithPath(
+        image=base64_2x2_image, path='path'
+    )
     res = await get_image_from_storage_async('path')
     assert res
 

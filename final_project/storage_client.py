@@ -1,3 +1,4 @@
+from asyncio import create_task
 from http import HTTPStatus
 from typing import Any, Dict, List, Optional
 
@@ -5,7 +6,7 @@ import aiohttp
 import requests
 from final_project.config import image_storage_settings
 from final_project.exceptions import StorageClientError, StorageError
-from final_project.models import Base64, Image, ImagePath, ImageWithPath
+from final_project.models import Base64, ImagePath, ImageWithPath
 
 URL = f'http://{image_storage_settings.address}:{image_storage_settings.port}'
 IMAGES = f'{URL}/images'
@@ -25,10 +26,10 @@ async def _get_image_from_storage_async(
             return await response.json()
 
 
-async def get_image_from_storage_async(path: str) -> Base64:
+async def get_image_from_storage_async(path: str) -> ImageWithPath:
     try:
         param = {'image_path': path}
-        return Image.parse_obj(await _get_image_from_storage_async(param)).image
+        return ImageWithPath.parse_obj(await _get_image_from_storage_async(param))
     except StorageClientError as e:
         raise StorageError(str(e))
 
@@ -66,3 +67,8 @@ async def get_all_user_images(user_id: int) -> List[ImageWithPath]:
     except StorageClientError as e:
         raise StorageError(str(e))
     return [ImageWithPath.parse_obj(item) for item in res]
+
+
+async def get_images(paths: List[ImagePath]) -> List[ImageWithPath]:
+    tasks = [create_task(get_image_from_storage_async(p.path)) for p in paths]
+    return [await t for t in tasks]

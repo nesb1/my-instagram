@@ -13,19 +13,19 @@ from final_project.data_access_layer.storage import (
 )
 from final_project.exceptions import StorageDALNotExistsError
 from final_project.messages import Message
-from final_project.models import Image, ImageIn, ImagePath, ImageWithPath
+from final_project.models import ImageIn, ImagePath, ImageWithPath
 from final_project.utils import decode_base64_to_bytes
-from PIL.Image import open
+from PIL.Image import open as open_image
 from starlette.responses import JSONResponse
 
 app = FastAPI()
 
 
-@app.get('/images', response_model=Image)
+@app.get('/images', response_model=ImageWithPath)
 async def get_image_from_storage(image_path: str) -> Any:
     try:
         image = get_image(Path(image_path))
-        return Image(image=image)
+        return ImageWithPath(image=image, path=image_path)
     except StorageDALNotExistsError as e:
         return JSONResponse({'message': str(e)}, HTTPStatus.NOT_FOUND.value)
 
@@ -42,7 +42,7 @@ async def get_user_images(user_id: int) -> Any:
 @app.post('/images', response_model=ImagePath, status_code=HTTPStatus.CREATED.value)
 async def add_image(image: ImageIn) -> Any:
     try:
-        pillow_image = open(BytesIO(decode_base64_to_bytes(image.image)))
+        pillow_image = open_image(BytesIO(decode_base64_to_bytes(image.image)))
         path = save_image(image.user_id, pillow_image)
         return ImageWithPath(path=str(path), image=image.image)
     except PIL.UnidentifiedImageError:

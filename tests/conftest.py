@@ -6,6 +6,7 @@ import testing.postgresql
 from final_project.app_creation import get_app
 from final_project.data_access_layer.users import UsersDataAccessLayer
 from final_project.database import database
+from final_project.image_processor.worker import _add_post_to_db
 from final_project.models import InPost, InUser, OutUser
 from final_project.redis import RedisInstances
 from final_project.utils import encode_bytes_to_base64
@@ -52,6 +53,11 @@ def in_user(username, password):
 
 
 @pytest.fixture()
+def third_in_user(username, password):
+    return InUser(username=username, password=password)
+
+
+@pytest.fixture()
 async def _subscribe_on_user():
     await UsersDataAccessLayer.subscribe(1, 2)
 
@@ -59,6 +65,11 @@ async def _subscribe_on_user():
 @pytest.fixture()
 def second_in_user():
     return InUser(username='user2', password='password')
+
+
+@pytest.fixture()
+def third_in_user():
+    return InUser(username='user3', password='password')
 
 
 @pytest.fixture()
@@ -79,8 +90,23 @@ async def _add_second_user(second_in_user):
 
 
 @pytest.fixture()
+def image_path():
+    return '1'
+
+
+@pytest.fixture()
+def _add_post(in_post, image_path):
+    _add_post_to_db(1, image_path, in_post.description, in_post.location)
+
+
+@pytest.fixture()
 async def _add_user(in_user: InUser):
     await UsersDataAccessLayer.add_user(in_user)
+
+
+@pytest.fixture()
+async def _add_third_user(third_in_user: InUser):
+    await UsersDataAccessLayer.add_user(third_in_user)
 
 
 @pytest.fixture()

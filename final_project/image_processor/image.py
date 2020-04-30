@@ -18,15 +18,15 @@ class MyImage:
             raise MyImageError(Message.BYTES_ARE_NOT_A_IMAGE.value)
 
     @property
-    def height(self):
+    def height(self) -> int:
         return self.image.height
 
     @property
-    def width(self):
+    def width(self) -> int:
         return self.image.width
 
     @staticmethod
-    def _increase_proportionally(image: Image, increase_ratio) -> Image:
+    def _increase_proportionally(image: Image, increase_ratio: int) -> Image:
         width, height = image.width * increase_ratio, image.height * increase_ratio
         return image.resize((width, height))
 

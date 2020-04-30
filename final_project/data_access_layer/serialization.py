@@ -16,7 +16,6 @@ def serialize(orm_obj: Base) -> BaseModel:
 
 @serialize.register
 def _(orm_obj: DB_Comment) -> BaseModel:
-    user_id = orm_obj.user_id
     user = OutUser.from_orm(orm_obj.user)
     like_users: List[OutUser] = []
     for user in orm_obj.likes:
@@ -26,7 +25,7 @@ def _(orm_obj: DB_Comment) -> BaseModel:
     )
 
 
-@serialize.register
+@serialize.register  # type: ignore
 def _(orm_obj: DB_Post) -> BaseModel:
     marked_users: List[OutUser] = []
     for user in orm_obj.marked_users:
@@ -53,7 +52,7 @@ def _get_user_out_list(users: List[DB_User]) -> List[OutUser]:
     return [OutUser.from_orm(user) for user in users]
 
 
-@serialize.register
+@serialize.register  # type: ignore
 def _(orm_obj: DB_User) -> BaseModel:
     user_out = OutUser.from_orm(orm_obj)
     subscribers = _get_user_out_list(orm_obj.subscribers)

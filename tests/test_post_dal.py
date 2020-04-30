@@ -3,9 +3,10 @@ from final_project.data_access_layer.post import PostDAL
 from final_project.database.database import create_session
 from final_project.database.models import Post
 from final_project.exceptions import PostDALError, PostDALNotExistsError, StorageError
-from final_project.image_processor.worker import _add_post_to_db
 from final_project.messages import Message
 from mock import AsyncMock
+
+from final_project.models import ImageWithPath
 
 
 @pytest.mark.asyncio
@@ -13,16 +14,6 @@ from mock import AsyncMock
 async def test_get_post_when_post_not_exists_will_raise_error():
     with pytest.raises(PostDALNotExistsError):
         await PostDAL.get_post(1)
-
-
-@pytest.fixture()
-def image_path():
-    return 'test_path'
-
-
-@pytest.fixture()
-def _add_post(in_post, image_path):
-    _add_post_to_db(1, image_path, in_post.description, in_post.location)
 
 
 @pytest.fixture()
@@ -40,7 +31,7 @@ def patched_storage_client(mocker):
 @pytest.fixture()
 def mock_get_image_from_storage(patched_storage_client):
     patched_storage_client.get_image_from_storage_async = AsyncMock(
-        return_value=b'1234'
+        return_value=ImageWithPath(image=b'1234',path='path')
     )
     return patched_storage_client
 

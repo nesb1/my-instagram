@@ -10,7 +10,8 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.util.compat import contextmanager
 
 engine = create_engine(
-    f'postgresql://{db_settings.user}:{db_settings.password}@{db_settings.server_name}/{db_settings.db_name}',
+    f'postgresql://{db_settings.user}:{db_settings.password}@{db_settings.server_name}/'
+    f'{db_settings.db_name}',
 )
 Base = declarative_base(bind=engine)
 

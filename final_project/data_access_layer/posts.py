@@ -4,7 +4,6 @@ from uuid import uuid4
 from final_project import storage_client
 from final_project.data_access_layer.users import UsersDataAccessLayer
 from final_project.database.database import create_session
-from final_project.database.models import Post as DB_Post
 from final_project.database.models import User
 from final_project.exceptions import PostsDALError, PostsDALNotExistsError, StorageError
 from final_project.image_processor.worker import process_image
@@ -12,13 +11,13 @@ from final_project.messages import Message
 from final_project.models import (
     ImageWithPath,
     InPost,
-    Post,
     PostWithImage,
     TaskResponse,
     WorkerResult,
 )
 from final_project.redis import RedisInstances
 from final_project.redis_keys import RedisKey
+from final_project.utils import join_posts_with_images
 
 
 class PostsDAL:
@@ -46,12 +45,11 @@ class PostsDAL:
                     status=Message.POST_READY.value,
                     post_id=job_result.post_id,
                 )
-            else:
-                return TaskResponse(
-                    task_id=task_id,
-                    status=Message.POST_TASK_FALLEN.value,
-                    error_text=job_result.error,
-                )
+            return TaskResponse(
+                task_id=task_id,
+                status=Message.POST_TASK_FALLEN.value,
+                error_text=job_result.error,
+            )
         return TaskResponse(
             task_id=task_id, status=Message.POST_ACCEPTED_FOR_PROCESSING.value
         )
@@ -96,19 +94,6 @@ class PostsDAL:
         raise PostsDALNotExistsError(Message.TASK_NOT_EXISTS.value)
 
     @staticmethod
-    def _join_posts_with_images(
-        posts: List[DB_Post], images: List[ImageWithPath]
-    ) -> List[PostWithImage]:
-        res = []
-        for img in images:
-            for post in posts:
-                if post.image_path == img.path:
-                    res.append(
-                        PostWithImage(**Post.from_orm(post).dict(), image=img.image)
-                    )
-        return res
-
-    @staticmethod
     async def get_posts(user_id: int) -> List[PostWithImage]:
         with create_session() as session:
             user = session.query(User).filter(User.id == user_id).first()
@@ -123,4 +108,4 @@ class PostsDAL:
                 )
             except StorageError as e:
                 raise PostsDALError(e)
-            return PostsDAL._join_posts_with_images(posts, images)
+            return join_posts_with_images(posts, images)

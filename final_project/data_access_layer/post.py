@@ -17,12 +17,12 @@ class PostDAL:
         with create_session() as session:
             post = await PostDAL._get_post(post_id, session)
             try:
-                image: Base64 = await storage_client.get_image_from_storage_async(
-                    post.image_path
-                )
+                image: Base64 = (
+                    await storage_client.get_image_from_storage_async(post.image_path)
+                ).image
             except StorageError:
                 raise PostDALError(Message.IMAGE_DOES_NOT_EXISTS_ON_STORAGE.value)
-            serialized_post: Post = serialize(post)
+            serialized_post: Post = serialize(post)  # type: ignore
         return PostWithImage(**serialized_post.dict(), image=image)
 
     @staticmethod
@@ -31,10 +31,10 @@ class PostDAL:
         post: DBPost = session.query(DBPost).filter(DBPost.id == post_id).first()
         if not post:
             raise PostDALNotExistsError(Message.POST_NOT_EXISTS.value)
-        return post
+        return post  # type: ignore
 
     @staticmethod
-    def _is_user_has_like(likes: List[User], user: User):
+    def _is_user_has_like(likes: List[User], user: User) -> bool:
         return user in likes
 
     @staticmethod

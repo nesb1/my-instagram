@@ -42,3 +42,7 @@ class StorageError(Exception):
 
 class PostDALError(Exception):
     pass
+
+
+class PaginationError(Exception):
+    pass

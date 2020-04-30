@@ -34,14 +34,6 @@ class TokensResponse(BaseModel):
     access_token: bytes
     refresh_token: bytes
 
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, TokensResponse):
-            return True
-        return (
-            self.access_token == other.access_token
-            and self.refresh_token == other.refresh_token
-        )
-
 
 class UserWithTokens(OutUser):
     access_token: bytes
