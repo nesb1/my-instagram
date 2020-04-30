@@ -51,6 +51,11 @@ def in_user(username, password):
 
 
 @pytest.fixture()
+async def _subscribe_on_user():
+    await UsersDataAccessLayer.subscribe(1, 2)
+
+
+@pytest.fixture()
 def second_in_user():
     return InUser(username='user2', password='password')
 

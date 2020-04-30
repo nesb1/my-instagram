@@ -73,13 +73,10 @@ async def test_subscribe_on_myself_will_raise_error():
         await UsersDataAccessLayer.subscribe(1, 1)
 
 
-@pytest.fixture()
-async def _subscribe_on_user():
-    await UsersDataAccessLayer.subscribe(1, 2)
-
-
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('_init_db', '_add_user', '_add_second_user','_subscribe_on_user')
+@pytest.mark.usefixtures(
+    '_init_db', '_add_user', '_add_second_user', '_subscribe_on_user'
+)
 async def test_subscribe_two_times_will_raises_error():
     with pytest.raises(UsersDALError):
         await UsersDataAccessLayer.subscribe(1, 2)
@@ -129,3 +126,36 @@ async def test_unsubscribe_from_user_that_not_in_subscriptions():
 async def test_unsubscribe_from_myself():
     with pytest.raises(UsersDALError):
         await UsersDataAccessLayer.unsubscribe(1, 1)
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('_init_db')
+async def test_find_user_by_substring_with_similar_names(in_user, second_in_user):
+    in_user.username = '123'
+    second_in_user.username = '12'
+    await UsersDataAccessLayer.add_user(in_user)
+    await UsersDataAccessLayer.add_user(second_in_user)
+    res = await UsersDataAccessLayer.get_user_by_substring_in_username('1')
+    assert len(res) == 2
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('_init_db')
+async def test_find_user_by_substring_when_substrings_are_difference(
+    in_user, second_in_user
+):
+    in_user.username = '1'
+    second_in_user.username = '2'
+    await UsersDataAccessLayer.add_user(in_user)
+    await UsersDataAccessLayer.add_user(second_in_user)
+    res = await UsersDataAccessLayer.get_user_by_substring_in_username('1')
+    assert len(res) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('_init_db')
+async def test_find_user_by_substring_with_not_exists_name(in_user):
+    in_user.username = '1'
+    await UsersDataAccessLayer.add_user(in_user)
+    res = await UsersDataAccessLayer.get_user_by_substring_in_username('2')
+    assert len(res) == 0

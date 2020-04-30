@@ -1,10 +1,11 @@
 from typing import Awaitable, List, Union
 
+from final_project.data_access_layer.serialization import serialize
 from final_project.database.database import create_session, run_in_threadpool
 from final_project.database.models import User
 from final_project.exceptions import UsersDALDoesNotExistsError, UsersDALError
 from final_project.messages import Message
-from final_project.models import InUser, OutUser, UserWithTokens
+from final_project.models import InUser, OutUser, UserInDetailOut, UserWithTokens
 from final_project.password import get_password_hash
 from sqlalchemy.orm import Session
 
@@ -102,3 +103,12 @@ class UsersDataAccessLayer:
                 raise UsersDALError(Message.USER_NOT_SUBSCRIBED_ON_THIS_USER.value)
             subscriptions.remove(another_user)
             return UsersDataAccessLayer._serialize_to_list_out_users(subscriptions)
+
+    @staticmethod
+    @run_in_threadpool
+    def get_user_by_substring_in_username(
+        substring: str,
+    ) -> Awaitable[List[UserInDetailOut]]:
+        with create_session() as session:
+            res = session.query(User).filter(User.username.contains(substring)).all()
+            return [serialize(user) for user in res]

@@ -4,8 +4,13 @@ from typing import Any, List
 from fastapi import APIRouter, Depends
 from final_project.data_access_layer.auth import check_authorization
 from final_project.data_access_layer.users import UsersDataAccessLayer
-from final_project.exceptions import UsersDALError
-from final_project.models import ErrorMessage, InUser, OutUser, UserId
+from final_project.exceptions import (
+    PostDALNotExistsError,
+    UsersDALDoesNotExistsError,
+    UsersDALError,
+)
+from final_project.messages import Message
+from final_project.models import ErrorMessage, InUser, OutUser, UserId, UserInDetailOut
 from starlette.responses import JSONResponse
 
 router = APIRouter()
@@ -60,12 +65,24 @@ async def get_subscriptions(user_id: int) -> Any:
     responses={HTTPStatus.UNAUTHORIZED.value: {'model': ErrorMessage}},
 )
 async def subscribe(
-    another_user: UserId, user: OutUser = Depends(check_authorization)
+    user_id: int, another_user: UserId, user: OutUser = Depends(check_authorization)
 ) -> Any:
-
     '''
     Возвращает список подписок
     '''
+    try:
+        if user_id != user.id:
+            return JSONResponse(
+                {'message': str(Message.ACCESS_FORBIDDEN.value)},
+                status_code=HTTPStatus.FORBIDDEN.value,
+            )
+        return await UsersDataAccessLayer.subscribe(
+            user_id=user.id, want_subscribe_on_user_with_id=another_user.user_id
+        )
+    except UsersDALDoesNotExistsError as e:
+        return JSONResponse({'message': str(e)}, HTTPStatus.NOT_FOUND.value)
+    except UsersDALError as e:
+        return JSONResponse({'message': str(e)}, HTTPStatus.BAD_REQUEST.value)
 
 
 @router.delete(
@@ -74,17 +91,32 @@ async def subscribe(
     responses={HTTPStatus.UNAUTHORIZED.value: {'model': ErrorMessage}},
     status_code=HTTPStatus.NO_CONTENT.value,
 )
-async def unsubscribe(user_id: int, another_user_id: int) -> Any:
-    pass
+async def unsubscribe(
+    user_id: int, another_user: UserId, user: OutUser = Depends(check_authorization)
+) -> Any:
+    try:
+        if user_id != user.id:
+            return JSONResponse(
+                {'message': str(Message.ACCESS_FORBIDDEN.value)},
+                status_code=HTTPStatus.FORBIDDEN.value,
+            )
+        return await UsersDataAccessLayer.unsubscribe(
+            user_id=user.id, want_unsubscribe_on_user_with_id=another_user.user_id
+        )
+    except UsersDALDoesNotExistsError as e:
+        return JSONResponse({'message': str(e)}, HTTPStatus.NOT_FOUND.value)
+    except UsersDALError as e:
+        return JSONResponse({'message': str(e)}, HTTPStatus.BAD_REQUEST.value)
 
 
 @router.get(
     '/',
     dependencies=[Depends(check_authorization)],
-    response_model=List[OutUser],
+    response_model=List[UserInDetailOut],
     responses={HTTPStatus.UNAUTHORIZED.value: {'model': ErrorMessage}},
 )
 async def search(substring: str) -> Any:
     '''
     Исчет пользователей в системе по логину и возвращает возможных
     '''
+    return await UsersDataAccessLayer.get_user_by_substring_in_username(substring)

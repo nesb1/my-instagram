@@ -4,7 +4,8 @@ from typing import List
 from final_project.database.database import Base
 from final_project.database.models import Comment as DB_Comment
 from final_project.database.models import Post as DB_Post
-from final_project.models import Comment, OutUser, Post
+from final_project.database.models import User as DB_User
+from final_project.models import Comment, OutUser, Post, UserInDetailOut
 from pydantic import BaseModel
 
 
@@ -44,4 +45,18 @@ def _(orm_obj: DB_Post) -> BaseModel:
         created_at=orm_obj.created_at,
         marked_users=marked_users,
         location=orm_obj.location,
+    )
+
+
+def _get_user_out_list(users: List[DB_User]) -> List[OutUser]:
+    return [OutUser.from_orm(user) for user in users]
+
+
+@serialize.register
+def _(orm_obj: DB_User) -> BaseModel:
+    user_out = OutUser.from_orm(orm_obj)
+    subscribers = _get_user_out_list(orm_obj.subscribers)
+    subscriptions = _get_user_out_list(orm_obj.subscriptions)
+    return UserInDetailOut(
+        **user_out.dict(), subscriptions=subscriptions, subscribers=subscribers
     )

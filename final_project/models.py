@@ -71,10 +71,6 @@ class Base64(bytes):
         return value.encode()
 
 
-# class Like(BaseModel):
-#     user: OutUser
-
-
 class Comment(BaseModel):
     user: OutUser
     created_at: datetime
@@ -140,3 +136,8 @@ class ImagePath(BaseModel):
 class ImageIn(BaseModel):
     user_id: int
     image: Base64
+
+
+class UserInDetailOut(OutUser):
+    subscribers: List[OutUser]
+    subscriptions: List[OutUser]
