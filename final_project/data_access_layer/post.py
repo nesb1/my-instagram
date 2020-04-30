@@ -34,7 +34,7 @@ class PostDAL:
         return post
 
     @staticmethod
-    def _is_user_already_like(likes: List[User], user: User):
+    def _is_user_has_like(likes: List[User], user: User):
         return user in likes
 
     @staticmethod
@@ -42,8 +42,26 @@ class PostDAL:
         with create_session() as session:
             post = await PostDAL._get_post(post_id, session)
             likes = post.likes
-            user = session.query(User).filter(User.id == user_id_who_likes).one()
-            if PostDAL._is_user_already_like(likes, user):
+            user = await PostDAL._get_user(user_id_who_likes, session)
+            if PostDAL._is_user_has_like(likes, user):
                 raise PostDALError(Message.USER_HAS_ALREADY_LIKE_THIS_POST.value)
             likes.append(user)
             return [OutUser.from_orm(user) for user in likes]
+
+    @staticmethod
+    @run_in_threadpool
+    def _get_user(user_id: int, session: Session) -> Awaitable[User]:
+        user = session.query(User).filter(User.id == user_id).first()
+        if user:
+            return user
+        raise PostDALNotExistsError(Message.USER_DOES_NOT_EXISTS.value)
+
+    @staticmethod
+    async def remove_like(post_id: int, user_id_who_wants_delete_like: int) -> None:
+        with create_session() as session:
+            post = await PostDAL._get_post(post_id, session)
+            user = await PostDAL._get_user(user_id_who_wants_delete_like, session)
+            likes = post.likes
+            if not PostDAL._is_user_has_like(likes, user):
+                raise PostDALNotExistsError(Message.USER_DID_NOT_LIKE_THIS_POST.value)
+            likes.remove(user)

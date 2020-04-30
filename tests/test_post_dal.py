@@ -69,10 +69,13 @@ async def test__get_post_when_image_does_not_exists_on_storage(patched_storage_c
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(
-    '_init_db', '_add_user', '_add_post', 'mock_get_image_from_storage'
+    '_init_db', '_add_user', '_add_post', 'mock_get_image_from_storage', '_add_like'
 )
-async def test_get_post_when_post_contains_likes():
-    pass
+async def test_get_post_when_post_contains_likes(out_user_first):
+    post = await PostDAL.get_post(1)
+    likes = post.likes
+    assert len(likes) == 1
+    assert likes[0] == out_user_first
 
 
 @pytest.fixture()
@@ -115,9 +118,6 @@ async def test_like_post_save_like_in_db(id_, users):
         assert likes[0].id == id_
 
 
-# async def test_post_save_like_if_like_already_exists()
-
-
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('_init_db', '_add_user')
 async def test_like_post_raises_error_if_post_does_not_exists():
@@ -125,9 +125,41 @@ async def test_like_post_raises_error_if_post_does_not_exists():
         await PostDAL.like(1, 1)
 
 
-@pytest.mark.asyncio
-@pytest.mark.usefixtures('_init_db', '_add_user', '_add_post')
-async def test_like_post_raises_error_if_like_from_this_user_already_exists():
+@pytest.fixture()
+async def _add_like():
     await PostDAL.like(1, 1)
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('_init_db', '_add_user', '_add_post', '_add_like')
+async def test_like_post_raises_error_if_like_from_this_user_already_exists():
     with pytest.raises(PostDALError):
         await PostDAL.like(1, 1)
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('_init_db', '_add_user', '_add_post', '_add_like')
+async def test_remove_like_deletes_it_in_db():
+    await PostDAL.remove_like(1, 1)
+    with create_session() as session:
+        post = session.query(Post).filter(Post.id == 1).one()
+        assert len(post.likes) == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(
+    '_init_db', '_add_user', '_add_post', '_add_like', '_add_second_user'
+)
+async def test_remove_like_deletes_it_in_db_with_multiple_likes_case():
+    await PostDAL.like(1, 2)
+    await PostDAL.remove_like(1, 1)
+    with create_session() as session:
+        post = session.query(Post).filter(Post.id == 1).one()
+        assert len(post.likes) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('_init_db', '_add_user', '_add_post')
+async def test_remove_like_if_like_exists_will_raises_error():
+    with pytest.raises(PostDALNotExistsError):
+        await PostDAL.remove_like(1, 1)
