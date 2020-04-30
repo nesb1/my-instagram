@@ -84,9 +84,8 @@ async def test_get_tokens_generates_new_token_pair_for_new_authorization_and_old
 ):
     # старая пара должна быть не валидна, хотя время жизни токена еще не истекло
     await generate_tokens(username, password)
-    res = await check_authorization(tokens.access_token.decode())
-    assert isinstance(res, JSONResponse)
-    assert res.status_code == HTTPStatus.BAD_REQUEST
+    with pytest.raises(AuthDALError):
+        await check_authorization(tokens.access_token.decode())
 
 
 @pytest.mark.asyncio

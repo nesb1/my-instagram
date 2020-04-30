@@ -1,7 +1,6 @@
 import base64
-from io import BytesIO
 from pathlib import Path
-from PIL.Image import open, Image
+
 from final_project.models import Base64
 
 

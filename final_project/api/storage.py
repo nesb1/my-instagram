@@ -13,8 +13,8 @@ from final_project.data_access_layer.storage import (
 )
 from final_project.exceptions import StorageDALNotExistsError
 from final_project.messages import Message
-from final_project.models import Image, ImageIn, ImagePath, ImageWithPath, Base64
-from final_project.utils import decode_base64_to_bytes, encode_bytes_to_base64
+from final_project.models import Image, ImageIn, ImagePath, ImageWithPath
+from final_project.utils import decode_base64_to_bytes
 from PIL.Image import open
 from starlette.responses import JSONResponse
 
@@ -53,6 +53,7 @@ async def add_image(image: ImageIn) -> Any:
             Message.BYTES_ARE_NOT_A_IMAGE.value,
             status_code=HTTPStatus.BAD_REQUEST.value,
         )
+
 
 if __name__ == '__main__':
     uvicorn.run(app)

@@ -1,6 +1,5 @@
 from binascii import Error
 from datetime import datetime
-from time import sleep
 from typing import List, Optional
 
 from final_project.config import image_cutting_settings, redis_settings
@@ -32,7 +31,7 @@ class Processor:
 
 
 def _add_post_to_db(
-        user_id: int, image_path: str, description: str, location: Optional[str]
+    user_id: int, image_path: str, description: str, location: Optional[str]
 ) -> int:
     with create_session() as session:
         post = Post(

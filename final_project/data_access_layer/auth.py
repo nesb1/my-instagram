@@ -12,10 +12,9 @@ from final_project.database.database import create_session, run_in_threadpool
 from final_project.database.models import User
 from final_project.exceptions import AuthDALError
 from final_project.messages import Message
-from final_project.models import TokensResponse
+from final_project.models import TokensResponse, OutUser, UserWithTokens
 from final_project.password import get_password_hash
 from jwt import PyJWTError
-from starlette.responses import JSONResponse
 
 SECRET_KEY = '123'
 ALGORITHM = 'HS256'
@@ -23,8 +22,8 @@ TOKEN_TYPE = 'bearer'
 oauth_scheme = OAuth2PasswordBearer(tokenUrl='/auth/token')
 
 
-async def _get_user_from_db(user_id: int) -> User:
-    user = await UsersDataAccessLayer.get_user(user_id, without_error=True)
+async def _get_user_from_db(user_id: int) -> UserWithTokens:
+    user = await UsersDataAccessLayer.get_user(user_id, without_error=True, need_tokens=True)
     if not user:
         raise AuthDALError(Message.USER_DOES_NOT_EXISTS.value)
     return user
@@ -46,25 +45,18 @@ def _is_valid_token(actual_token: str, expected_token: str) -> bool:
 
 
 async def check_authorization(
-    token: str = Depends(oauth_scheme),
-) -> Union[User, JSONResponse]:
+        token: str = Depends(oauth_scheme),
+) -> OutUser:
     '''
     Обрабатывает jwt
     :raises HttpException со статусом 401 если произошла ошибка при обработке токена
     :return: user
     '''
-    try:
-        user_id = _get_user_id(token)
-        user = await _get_user_from_db(user_id)
-        if _is_valid_token(token, user.access_token):
-            return user
-        raise AuthDALError(Message.ACCESS_TOKEN_OUTDATED.value)
-    except AuthDALError as e:
-        return JSONResponse(
-            status_code=HTTPStatus.BAD_REQUEST,
-            headers={'WWW-Authenticate': 'Bearer'},
-            content={'message': str(e)},
-        )
+    user_id = _get_user_id(token)
+    user = await _get_user_from_db(user_id)
+    if _is_valid_token(token, user.access_token.decode()):
+        return OutUser.from_orm(user)
+    raise AuthDALError(Message.ACCESS_TOKEN_OUTDATED.value)
 
 
 def _is_password_correct(password: str, expected_password_hash: str) -> bool:
@@ -72,7 +64,7 @@ def _is_password_correct(password: str, expected_password_hash: str) -> bool:
 
 
 @run_in_threadpool
-def _authenticate_user(username: str, password: str) -> Awaitable[User]:
+def _authenticate_user(username: str, password: str) -> Awaitable[OutUser]:
     message = Message.INCORRECT_USERNAME_OR_PASSWORD.value
     with create_session() as session:
         user: Optional[User] = session.query(User).filter(
@@ -82,7 +74,7 @@ def _authenticate_user(username: str, password: str) -> Awaitable[User]:
     if user is None:
         raise AuthDALError(message)
     if _is_password_correct(password, user.password_hash):
-        return user
+        return OutUser.from_orm(user)
     raise AuthDALError(message)
 
 
@@ -93,20 +85,22 @@ def _create_token(user_id: int, expires_delta: timedelta) -> bytes:
 
 
 @run_in_threadpool
-def _save_tokens_to_db(user: User, access_token: bytes, refresh_token: bytes) -> None:
-    user.access_token = access_token.decode()
-    user.refresh_token = refresh_token.decode()
+def _save_tokens_to_db(user: OutUser, access_token: bytes, refresh_token: bytes) -> None:
     with create_session() as session:
+        user = session.query(User).filter(User.id == user.id).one()
+        user.refresh_token = refresh_token.decode()
+        user.access_token = access_token.decode()
         session.add(user)
 
 
-async def _create_tokens(user: User) -> TokensResponse:
+async def _create_tokens(user: OutUser) -> TokensResponse:
     access_token = _create_token(
         user.id, timedelta(minutes=tokens_settings.access_token_expire_minutes)
     )
     refresh_token = _create_token(
         user.id, timedelta(days=tokens_settings.refresh_toke_expire_time_days)
     )
+
     await _save_tokens_to_db(user, access_token, refresh_token)
     return TokensResponse(
         access_token=access_token, refresh_token=refresh_token, token_type=TOKEN_TYPE
@@ -127,6 +121,6 @@ async def refresh_tokens(refresh_token: str) -> TokensResponse:
     '''
     user_id = _get_user_id(refresh_token)
     user = await _get_user_from_db(user_id)
-    if not _is_valid_token(refresh_token, user.refresh_token):
+    if not _is_valid_token(refresh_token, user.refresh_token.decode()):
         raise AuthDALError(Message.INVALID_REFRESH_TOKEN.value)
     return await _create_tokens(user)

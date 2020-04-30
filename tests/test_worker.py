@@ -28,7 +28,7 @@ def _mock_cut(mocker, image_2x2):
 
 @pytest.fixture()
 def path():
-    return Path()
+    return str(Path())
 
 
 @pytest.fixture()
@@ -130,7 +130,7 @@ async def _add_2_users(in_user):
     with create_session() as session:
         for i in range(2):
             in_user.username = str(i)
-            session.add(await UsersDataAccessLayer.add_user(in_user))
+            await UsersDataAccessLayer.add_user(in_user)
 
 
 @pytest.mark.usefixtures(

@@ -34,3 +34,7 @@ class StorageClientError(Exception):
 
 class StorageError(Exception):
     pass
+
+
+class PostDALError(Exception):
+    pass

@@ -1,14 +1,14 @@
 from io import BytesIO
-from pathlib import Path
 
 from final_project.config import image_storage_settings
 from final_project.exceptions import MyImageError
 from final_project.messages import Message
+from final_project.storage_client import save_image_to_storage
 from final_project.utils import encode_bytes_to_base64
 from PIL import UnidentifiedImageError
 from PIL.Image import Image
 from PIL.Image import open as open_image
-from final_project.storage_client import save_image_to_storage
+
 
 class MyImage:
     def __init__(self, image: bytes) -> None:

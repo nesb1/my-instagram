@@ -44,7 +44,6 @@ async def test_get_existing_user_returns_expected_value(username):
     user = await UsersDataAccessLayer.get_user(1)
     assert user
     assert user.username == username
-    assert user.password_hash
 
 
 @pytest.mark.asyncio
