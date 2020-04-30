@@ -38,6 +38,7 @@ def _(orm_obj: DB_Post) -> BaseModel:
     for user in orm_obj.likes:
         likes.append(user)
     return Post(
+        id=orm_obj.id,
         user=OutUser.from_orm(orm_obj.user),
         comments=comments,
         description=orm_obj.description,

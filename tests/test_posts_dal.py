@@ -2,10 +2,12 @@ import pytest
 from aioredis import Redis
 from final_project.data_access_layer.posts import PostsDAL
 from final_project.exceptions import PostsDALError, PostsDALNotExistsError
-from final_project.image_processor.worker import process_image
+from final_project.image_processor.worker import _add_post_to_db, process_image
 from final_project.messages import Message
+from final_project.models import ImageWithPath
 from final_project.redis import RedisInstances
 from final_project.redis_keys import RedisKey
+from mock import AsyncMock
 from rq import Queue
 
 
@@ -132,3 +134,27 @@ async def test_get_posts_when_user_does_not_have_posts():
 async def test_get_posts_when_user_does_not_exists():
     with pytest.raises(PostsDALNotExistsError):
         await PostsDAL.get_posts(1)
+
+
+@pytest.fixture()
+def mocked_storage_client(mocker):
+    return mocker.patch('final_project.data_access_layer.posts.storage_client')
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('_init_db', '_add_user')
+async def test_get_posts(mocked_storage_client, base64_2x2_image, base64_4x4_image):
+    path1 = 'path1'
+    path2 = 'path2'
+    mocked_storage_client.get_all_user_images = AsyncMock(
+        return_value=[
+            ImageWithPath(image=base64_2x2_image, path=path1),
+            ImageWithPath(image=base64_4x4_image, path=path2),
+        ]
+    )
+    _add_post_to_db(1, path1, description='with_2x2_image', location='1')
+    _add_post_to_db(1, path2, description='wth_4x4_image', location='2')
+    posts = await PostsDAL.get_posts(1)
+    posts.sort(key=lambda post: post.id)
+    assert posts[0].image == base64_2x2_image
+    assert posts[1].image == base64_4x4_image

@@ -119,4 +119,16 @@ async def search(substring: str) -> Any:
     '''
     Исчет пользователей в системе по логину и возвращает возможных
     '''
-    return await UsersDataAccessLayer.get_user_by_substring_in_username(substring)
+    return await UsersDataAccessLayer.get_users_by_substring_in_username(substring)
+
+
+@router.get(
+    '/{user_id}',
+    dependencies=[Depends(check_authorization)],
+    response_model=UserInDetailOut,
+)
+async def get_user_by_id(user_id: int) -> Any:
+    try:
+        return await UsersDataAccessLayer.get_user_by_id(user_id)
+    except UsersDALDoesNotExistsError as e:
+        return JSONResponse({'message': str(e)}, HTTPStatus.NOT_FOUND.value)

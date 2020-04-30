@@ -106,9 +106,15 @@ class UsersDataAccessLayer:
 
     @staticmethod
     @run_in_threadpool
-    def get_user_by_substring_in_username(
+    def get_users_by_substring_in_username(
         substring: str,
     ) -> Awaitable[List[UserInDetailOut]]:
         with create_session() as session:
             res = session.query(User).filter(User.username.contains(substring)).all()
             return [serialize(user) for user in res]
+
+    @staticmethod
+    async def get_user_by_id(user_id: int) -> UserInDetailOut:
+        with create_session() as session:
+            user = await UsersDataAccessLayer._get_user(user_id, session)
+            return serialize(user)

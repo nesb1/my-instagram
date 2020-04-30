@@ -135,7 +135,7 @@ async def test_find_user_by_substring_with_similar_names(in_user, second_in_user
     second_in_user.username = '12'
     await UsersDataAccessLayer.add_user(in_user)
     await UsersDataAccessLayer.add_user(second_in_user)
-    res = await UsersDataAccessLayer.get_user_by_substring_in_username('1')
+    res = await UsersDataAccessLayer.get_users_by_substring_in_username('1')
     assert len(res) == 2
 
 
@@ -148,7 +148,7 @@ async def test_find_user_by_substring_when_substrings_are_difference(
     second_in_user.username = '2'
     await UsersDataAccessLayer.add_user(in_user)
     await UsersDataAccessLayer.add_user(second_in_user)
-    res = await UsersDataAccessLayer.get_user_by_substring_in_username('1')
+    res = await UsersDataAccessLayer.get_users_by_substring_in_username('1')
     assert len(res) == 1
 
 
@@ -157,5 +157,19 @@ async def test_find_user_by_substring_when_substrings_are_difference(
 async def test_find_user_by_substring_with_not_exists_name(in_user):
     in_user.username = '1'
     await UsersDataAccessLayer.add_user(in_user)
-    res = await UsersDataAccessLayer.get_user_by_substring_in_username('2')
+    res = await UsersDataAccessLayer.get_users_by_substring_in_username('2')
     assert len(res) == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('_init_db', '_add_user')
+async def test_get_user_by_id():
+    res = await UsersDataAccessLayer.get_user_by_id(1)
+    assert res
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('_init_db')
+async def test_get_user_by_id_if_user_does_not_exists():
+    with pytest.raises(UsersDALDoesNotExistsError):
+        await UsersDataAccessLayer.get_user_by_id(1)

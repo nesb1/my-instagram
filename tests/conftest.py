@@ -8,6 +8,7 @@ from final_project.data_access_layer.users import UsersDataAccessLayer
 from final_project.database import database
 from final_project.models import InPost, InUser, OutUser
 from final_project.redis import RedisInstances
+from final_project.utils import encode_bytes_to_base64
 from mock import AsyncMock
 from PIL.Image import open as open_to_image
 from redis import Redis
@@ -58,6 +59,18 @@ async def _subscribe_on_user():
 @pytest.fixture()
 def second_in_user():
     return InUser(username='user2', password='password')
+
+
+@pytest.fixture()
+def base64_2x2_image(image_2x2_in_bytes):
+    return encode_bytes_to_base64(image_2x2_in_bytes)
+
+
+@pytest.fixture()
+def base64_4x4_image(resource_directory):
+    with (resource_directory / 'image_4x4.png').open('rb') as f:
+        bytes_ = f.read()
+    return encode_bytes_to_base64(bytes_)
 
 
 @pytest.fixture()

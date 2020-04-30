@@ -7,24 +7,28 @@ from final_project.data_access_layer.posts import PostsDAL
 from final_project.database.models import User
 from final_project.exceptions import PostsDALError, PostsDALNotExistsError
 from final_project.messages import Message
-from final_project.models import InPost, Post, TaskResponse
+from final_project.models import InPost, PostWithImage, TaskResponse
 from starlette.responses import JSONResponse
 
 router = APIRouter()
 
 
-@router.get('/', response_model=List[Post])
+@router.get('/', response_model=List[PostWithImage])
 async def get_posts(user_id: int) -> Any:
-    '''
-    Возвращает список постов пользователя
-    '''
+    try:
+        return await PostsDAL.get_posts(user_id)
+    except PostsDALError as e:
+        return JSONResponse(
+            status_code=HTTPStatus.BAD_REQUEST.value, content={'message': str(e)}
+        )
+    except PostsDALNotExistsError as e:
+        return JSONResponse(
+            status_code=HTTPStatus.NOT_FOUND.value, content={'message': str(e)}
+        )
 
 
 @router.post(
-    '/',
-    status_code=HTTPStatus.CREATED.value,
-    # response_model=PostResponse,
-    # responses={HTTPStatus.FORBIDDEN.value: {'model': ErrorMessage}},
+    '/', status_code=HTTPStatus.CREATED.value,
 )
 async def add_post(
     user_id: int, post: InPost, authorized_user: User = Depends(check_authorization)

@@ -79,6 +79,7 @@ class Comment(BaseModel):
 
 
 class Post(BaseModel):
+    id: int
     user: OutUser
     comments: List[Comment]
     description: Optional[str] = None
