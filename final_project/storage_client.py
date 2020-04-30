@@ -20,7 +20,7 @@ async def get_image_from_storage_async(path: str) -> Base64:
 
 
 async def _get_image_from_storage_async(
-        params: Optional[Dict[str, Any]] = None
+    params: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     async with aiohttp.ClientSession() as session:
         async with session.get(IMAGES, params=params) as response:

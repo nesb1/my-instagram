@@ -1,7 +1,6 @@
 from copy import deepcopy
 from datetime import datetime, timedelta
-from http import HTTPStatus
-from typing import Any, Awaitable, Dict, Optional, Union
+from typing import Any, Awaitable, Dict, Optional
 
 import jwt
 from fastapi import Depends
@@ -12,7 +11,7 @@ from final_project.database.database import create_session, run_in_threadpool
 from final_project.database.models import User
 from final_project.exceptions import AuthDALError
 from final_project.messages import Message
-from final_project.models import TokensResponse, OutUser, UserWithTokens
+from final_project.models import OutUser, TokensResponse, UserWithTokens
 from final_project.password import get_password_hash
 from jwt import PyJWTError
 
@@ -23,7 +22,9 @@ oauth_scheme = OAuth2PasswordBearer(tokenUrl='/auth/token')
 
 
 async def _get_user_from_db(user_id: int) -> UserWithTokens:
-    user = await UsersDataAccessLayer.get_user(user_id, without_error=True, need_tokens=True)
+    user = await UsersDataAccessLayer.get_user(
+        user_id, without_error=True, need_tokens=True
+    )
     if not user:
         raise AuthDALError(Message.USER_DOES_NOT_EXISTS.value)
     return user
@@ -44,9 +45,7 @@ def _is_valid_token(actual_token: str, expected_token: str) -> bool:
     return actual_token == expected_token
 
 
-async def check_authorization(
-        token: str = Depends(oauth_scheme),
-) -> OutUser:
+async def check_authorization(token: str = Depends(oauth_scheme),) -> OutUser:
     '''
     Обрабатывает jwt
     :raises HttpException со статусом 401 если произошла ошибка при обработке токена
@@ -85,7 +84,9 @@ def _create_token(user_id: int, expires_delta: timedelta) -> bytes:
 
 
 @run_in_threadpool
-def _save_tokens_to_db(user: OutUser, access_token: bytes, refresh_token: bytes) -> None:
+def _save_tokens_to_db(
+    user: OutUser, access_token: bytes, refresh_token: bytes
+) -> None:
     with create_session() as session:
         user = session.query(User).filter(User.id == user.id).one()
         user.refresh_token = refresh_token.decode()

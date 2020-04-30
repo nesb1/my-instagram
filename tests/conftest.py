@@ -51,6 +51,16 @@ def in_user(username, password):
 
 
 @pytest.fixture()
+def second_in_user():
+    return InUser(username='user2', password='password')
+
+
+@pytest.fixture()
+async def _add_second_user(second_in_user):
+    return await UsersDataAccessLayer.add_user(second_in_user)
+
+
+@pytest.fixture()
 async def _add_user(in_user: InUser):
     await UsersDataAccessLayer.add_user(in_user)
 

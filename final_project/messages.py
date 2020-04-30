@@ -22,3 +22,4 @@ class Message(Enum):
     POSTS_DO_NOT_EXIST = 'Posts do not exist'
     IMAGE_DOES_NOT_EXISTS_ON_STORAGE = 'Image does not exists on storage'
     USER_DOES_NOT_HAVE_IMAGES = 'User does not have images'
+    USER_HAS_ALREADY_LIKE_THIS_POST = 'user has already like this post'

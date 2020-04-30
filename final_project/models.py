@@ -38,8 +38,8 @@ class TokensResponse(BaseModel):
         if not isinstance(other, TokensResponse):
             return True
         return (
-                self.access_token == other.access_token
-                and self.refresh_token == other.refresh_token
+            self.access_token == other.access_token
+            and self.refresh_token == other.refresh_token
         )
 
 
@@ -62,7 +62,7 @@ class Base64(bytes):
         if isinstance(value, bytes):
             value = value.decode()
         if value is None or not isinstance(value, str):
-            raise ValueError(f'actual value type is {type(value)} but expected{str}', )
+            raise ValueError(f'actual value type is {type(value)} but expected{str}',)
         if len(value) % 4 != 0:
             raise ValueError(Message.INVALID_BASE64_PADDING.value)
         pattern = re.compile('^[A-Za-z0-9+/]+={0,2}$')
@@ -71,25 +71,35 @@ class Base64(bytes):
         return value.encode()
 
 
-class Like(BaseModel):
-    user: OutUser
+# class Like(BaseModel):
+#     user: OutUser
 
 
 class Comment(BaseModel):
     user: OutUser
     created_at: datetime
     text: str
-    likes: List[Like]
+    likes: List[OutUser]
 
 
 class Post(BaseModel):
     user: OutUser
     comments: List[Comment]
     description: Optional[str] = None
-    likes: List[Like]
+    likes: List[OutUser]
     created_at: datetime
     marked_users: List[OutUser]
     location: Optional[str] = None
+
+    class Config:
+        orm_mode = True
+
+
+class PostWithImagePath(Post):
+    image_path: str
+
+    class Config:
+        orm_mode = True
 
 
 class PostWithImage(Post):

@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from http import HTTPStatus
 
 import pytest
 from final_project.config import tokens_settings
@@ -11,7 +10,6 @@ from final_project.data_access_layer.auth import (
 from final_project.database.database import create_session
 from final_project.database.models import User
 from final_project.exceptions import AuthDALError
-from starlette.responses import JSONResponse
 
 
 @pytest.fixture()

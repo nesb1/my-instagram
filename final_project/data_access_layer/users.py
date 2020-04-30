@@ -1,5 +1,4 @@
-from copy import deepcopy
-from typing import Awaitable, Optional, Union
+from typing import Awaitable, Union
 
 from final_project.database.database import create_session, run_in_threadpool
 from final_project.database.models import User
@@ -32,7 +31,7 @@ class UsersDataAccessLayer:
     @staticmethod
     @run_in_threadpool
     def get_user(
-            user_id: int, without_error: bool = False, need_tokens: bool = False
+        user_id: int, without_error: bool = False, need_tokens: bool = False
     ) -> Awaitable[Union[UserWithTokens, OutUser]]:
         with create_session() as session:
             user = session.query(User).filter(User.id == user_id).first()

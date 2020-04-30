@@ -23,7 +23,7 @@ def mock_get_image_from_storage_async(mocker):
 
 @pytest.mark.asyncio
 async def test_get_image_from_storage_returns_image_when_success_async(
-        mock_get_image_from_storage_async, base64_2x2_image
+    mock_get_image_from_storage_async, base64_2x2_image
 ):
     mock_get_image_from_storage_async.return_value = Image(image=base64_2x2_image)
     res = await get_image_from_storage_async('path')
@@ -32,7 +32,7 @@ async def test_get_image_from_storage_returns_image_when_success_async(
 
 @pytest.mark.asyncio
 async def test_get_image_from_storage_when_got_unexpecting_response_status_async(
-        mock_get_image_from_storage_async, base64_2x2_image
+    mock_get_image_from_storage_async, base64_2x2_image
 ):
     mock_get_image_from_storage_async.side_effect = StorageClientError(
         HTTPStatus.NOT_FOUND.value, Message.IMAGE_DOES_NOT_EXISTS_ON_STORAGE.value
@@ -42,7 +42,7 @@ async def test_get_image_from_storage_when_got_unexpecting_response_status_async
 
 
 def test_save_image_to_storage_when_got_unexpecting_response_status(
-        mock_add_image_to_storage, base64_2x2_image
+    mock_add_image_to_storage, base64_2x2_image
 ):
     mock_add_image_to_storage.side_effect = StorageClientError(
         HTTPStatus.BAD_REQUEST.value, Message.BYTES_ARE_NOT_A_IMAGE.value
@@ -52,7 +52,7 @@ def test_save_image_to_storage_when_got_unexpecting_response_status(
 
 
 def test_save_image_to_storage_returns_path_when_success(
-        mock_add_image_to_storage, base64_2x2_image
+    mock_add_image_to_storage, base64_2x2_image
 ):
     mock_add_image_to_storage.return_value = {'path': 'path'}
     res = save_image_to_storage(base64_2x2_image, user_id=1)

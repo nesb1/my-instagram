@@ -1,10 +1,10 @@
 from http import HTTPStatus
-from typing import Any
+from typing import Any, List
 
 from fastapi import APIRouter, Depends
 from final_project.data_access_layer.post import PostDAL
-from final_project.exceptions import PostDALNotExistsError
-from final_project.models import Comment, Post, PostWithImage
+from final_project.exceptions import PostDALError, PostDALNotExistsError
+from final_project.models import Comment, OutUser, PostWithImage
 from starlette.responses import JSONResponse
 
 router = APIRouter()
@@ -27,11 +27,21 @@ async def get_post(commons: CommonPathParams = Depends(CommonPathParams)) -> Any
         return JSONResponse({'message': str(e)}, HTTPStatus.NOT_FOUND.value)
 
 
-@router.post('/likes', response_model=Post, status_code=HTTPStatus.CREATED.value)
+@router.post(
+    '/likes', response_model=List[OutUser], status_code=HTTPStatus.CREATED.value
+)
 async def like(commons: CommonPathParams = Depends(CommonPathParams)) -> Any:
     '''
-    Ставит лайк, возвращает статус
+    Ставит лайк, возвращает список лайков
     '''
+    try:
+        return await PostDAL.like(
+            post_id=commons.post_id, user_id_who_likes=commons.user_id
+        )
+    except PostDALNotExistsError as e:
+        return JSONResponse({'message': str(e)}, HTTPStatus.NOT_FOUND.value)
+    except PostDALError as e:
+        return JSONResponse({'message': str(e)}, HTTPStatus.NOT_FOUND.value)
 
 
 @router.delete('/like', status_code=HTTPStatus.NO_CONTENT.value)
