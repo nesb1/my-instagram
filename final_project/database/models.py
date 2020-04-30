@@ -23,6 +23,13 @@ post_comments_likes_association_table = sa.Table(
     sa.Column('user.id', sa.Integer, sa.ForeignKey('comment.id')),
 )
 
+user_subsriptions = sa.Table(
+    'user_subsriptions_association',
+    Base.metadata,
+    sa.Column('follower_id', sa.Integer, sa.ForeignKey('user.id')),
+    sa.Column('followed_id', sa.Integer, sa.ForeignKey('user.id')),
+)
+
 
 class User(Base):
     __tablename__ = 'user'
@@ -32,6 +39,13 @@ class User(Base):
     access_token = sa.Column(sa.String)
     refresh_token = sa.Column(sa.String)
 
+    subscriptions = so.relationship(
+        'User',
+        secondary=user_subsriptions,
+        primaryjoin=(user_subsriptions.c.follower_id == id),
+        secondaryjoin=(user_subsriptions.c.followed_id == id),
+        backref=so.backref('subscribers'),
+    )
     posts = so.relationship('Post', back_populates=__tablename__, uselist=True)
     marked_on_posts = so.relationship(
         'Post',

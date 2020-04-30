@@ -5,7 +5,6 @@ from final_project.database.models import Post
 from final_project.exceptions import PostDALError, PostDALNotExistsError, StorageError
 from final_project.image_processor.worker import _add_post_to_db
 from final_project.messages import Message
-from final_project.models import OutUser
 from mock import AsyncMock
 
 
@@ -76,16 +75,6 @@ async def test_get_post_when_post_contains_likes(out_user_first):
     likes = post.likes
     assert len(likes) == 1
     assert likes[0] == out_user_first
-
-
-@pytest.fixture()
-def out_user_first(in_user):
-    return OutUser(id=1, username=in_user.username)
-
-
-@pytest.fixture()
-def out_user_second(second_in_user):
-    return OutUser(id=2, username=second_in_user.username)
 
 
 @pytest.fixture(params=[1, 2])

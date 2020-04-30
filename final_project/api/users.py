@@ -55,12 +55,14 @@ async def get_subscriptions(user_id: int) -> Any:
 
 @router.post(
     '/{user_id}/subscriptions/',
-    dependencies=[Depends(check_authorization)],
     status_code=HTTPStatus.CREATED.value,
     response_model=List[OutUser],
     responses={HTTPStatus.UNAUTHORIZED.value: {'model': ErrorMessage}},
 )
-async def subscribe(user_id: int, another_user: UserId) -> Any:
+async def subscribe(
+    another_user: UserId, user: OutUser = Depends(check_authorization)
+) -> Any:
+
     '''
     Возвращает список подписок
     '''

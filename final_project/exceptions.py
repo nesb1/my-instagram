@@ -2,6 +2,10 @@ class UsersDALError(Exception):
     pass
 
 
+class UsersDALDoesNotExistsError(Exception):
+    pass
+
+
 class AuthDALError(Exception):
     pass
 

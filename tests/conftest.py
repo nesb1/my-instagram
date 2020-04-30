@@ -6,7 +6,7 @@ import testing.postgresql
 from final_project.app_creation import get_app
 from final_project.data_access_layer.users import UsersDataAccessLayer
 from final_project.database import database
-from final_project.models import InPost, InUser
+from final_project.models import InPost, InUser, OutUser
 from final_project.redis import RedisInstances
 from mock import AsyncMock
 from PIL.Image import open as open_to_image
@@ -123,3 +123,13 @@ def in_post():
 @pytest.fixture()
 def uuid():
     return 'uuid'
+
+
+@pytest.fixture()
+def out_user_first(in_user):
+    return OutUser(id=1, username=in_user.username)
+
+
+@pytest.fixture()
+def out_user_second(second_in_user):
+    return OutUser(id=2, username=second_in_user.username)

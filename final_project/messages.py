@@ -24,3 +24,7 @@ class Message(Enum):
     USER_DOES_NOT_HAVE_IMAGES = 'User does not have images'
     USER_HAS_ALREADY_LIKE_THIS_POST = 'user has already like this post'
     USER_DID_NOT_LIKE_THIS_POST = 'User did not like this post'
+    USER_CANNOT_SUBSCRIBE_ON_HIMSELF = 'User cannot subscribe on himself'
+    USER_CANNOT_UNSUBSCRIBE_FROM_HIMSELF = 'User cannot unsubscribe from himself'
+    USER_ALREADY_SUBSCRIBED_ON_THIS_USER = 'User already subscribed on this user'
+    USER_NOT_SUBSCRIBED_ON_THIS_USER = 'User not subscribed on this user'
