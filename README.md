@@ -44,7 +44,9 @@
 БД - для проекта - postrgres, тк с базой данных функционируют несколько сервисов.
     В этом слуаче sqlite не подойдет
     
-    
+
+### Запуск
+   docker-compose up --build 	
 
 ### Create venv:
     make venv
@@ -57,6 +59,3 @@
 
 ### Run formatters:
     make format
-
-### Build service:
-	make build
