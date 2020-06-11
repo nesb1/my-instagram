@@ -2,7 +2,7 @@ import pytest
 from final_project.data_access_layer.users import UsersDataAccessLayer
 from final_project.database.database import create_session
 from final_project.database.models import User
-from final_project.exceptions import UsersDALDoesNotExistsError, UsersDALError
+from final_project.exceptions import DALError
 from final_project.image_processor.worker import _add_post_to_db
 from final_project.models import ImageWithPath
 from final_project.password import get_password_hash
@@ -29,7 +29,7 @@ async def test_add_new_user_adds_data_to_database(in_user):
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('_init_db', '_add_user')
 async def test_add_user_that_already_exists_will_raise_error(in_user):
-    with pytest.raises(UsersDALError):
+    with pytest.raises(DALError):
         await UsersDataAccessLayer.add_user(in_user)
 
 
@@ -52,7 +52,7 @@ async def test_get_existing_user_returns_expected_value(username):
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('_init_db')
 async def test_get_not_existing_user_raises_error():
-    with pytest.raises(UsersDALDoesNotExistsError):
+    with pytest.raises(DALError):
         await UsersDataAccessLayer.get_user(1)
 
 
@@ -65,14 +65,14 @@ async def test_get_not_existing_user_with_show_error_true_returns_none():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('_init_db', '_add_user')
 async def test_subscribe_on_user_that_does_not_exists_raises_error():
-    with pytest.raises(UsersDALDoesNotExistsError):
+    with pytest.raises(DALError):
         await UsersDataAccessLayer.subscribe(1, 2)
 
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('_init_db', '_add_user')
 async def test_subscribe_on_myself_will_raise_error():
-    with pytest.raises(UsersDALError):
+    with pytest.raises(DALError):
         await UsersDataAccessLayer.subscribe(1, 1)
 
 
@@ -81,7 +81,7 @@ async def test_subscribe_on_myself_will_raise_error():
     '_init_db', '_add_user', '_add_second_user', '_subscribe_on_user'
 )
 async def test_subscribe_two_times_will_raises_error():
-    with pytest.raises(UsersDALError):
+    with pytest.raises(DALError):
         await UsersDataAccessLayer.subscribe(1, 2)
 
 
@@ -120,14 +120,14 @@ async def test_unsubscribe_from_user_returns_expected_value(out_user_second):
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('_init_db', '_add_user', '_add_second_user')
 async def test_unsubscribe_from_user_that_not_in_subscriptions():
-    with pytest.raises(UsersDALError):
+    with pytest.raises(DALError):
         await UsersDataAccessLayer.unsubscribe(1, 2)
 
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('_init_db', '_add_user')
 async def test_unsubscribe_from_myself():
-    with pytest.raises(UsersDALError):
+    with pytest.raises(DALError):
         await UsersDataAccessLayer.unsubscribe(1, 1)
 
 
@@ -174,7 +174,7 @@ async def test_get_user_by_id():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('_init_db')
 async def test_get_user_by_id_if_user_does_not_exists():
-    with pytest.raises(UsersDALDoesNotExistsError):
+    with pytest.raises(DALError):
         await UsersDataAccessLayer.get_user_by_id(1)
 
 

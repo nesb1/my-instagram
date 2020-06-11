@@ -1,9 +1,10 @@
 import uuid
+from http import HTTPStatus
 from pathlib import Path
 from typing import List
 
 from final_project.config import image_storage_settings
-from final_project.exceptions import StorageDALNotExistsError
+from final_project.exceptions import DALError
 from final_project.messages import Message
 from final_project.models import Base64, ImageWithPath
 from final_project.utils import encode_bytes_to_base64
@@ -57,7 +58,9 @@ def save_image(user_id: int, image: Image) -> Path:
 
 def get_image(image_path: Path) -> Base64:
     if not image_path.exists():
-        raise StorageDALNotExistsError(Message.IMAGE_DOES_NOT_EXISTS_ON_STORAGE.value)
+        raise DALError(
+            HTTPStatus.NOT_FOUND.value, Message.IMAGE_DOES_NOT_EXISTS_ON_STORAGE.value
+        )
     with image_path.open('rb') as f:
         image_bytes = f.read()
         return encode_bytes_to_base64(image_bytes)
@@ -77,5 +80,7 @@ def get_all_user_images(user_id: int) -> List[ImageWithPath]:
     users_folder = _get_project_root() / _get_name_for_grouping_id(user_id)
     user_folder = users_folder / str(user_id)
     if not user_folder.exists():
-        raise StorageDALNotExistsError(Message.USER_DOES_NOT_HAVE_IMAGES.value)
+        raise DALError(
+            HTTPStatus.NOT_FOUND.value, Message.USER_DOES_NOT_HAVE_IMAGES.value
+        )
     return _get_all_images_from_folder(user_folder)

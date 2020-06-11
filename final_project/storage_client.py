@@ -20,9 +20,7 @@ async def _get_image_from_storage_async(
         async with session.get(IMAGES, params=params) as response:
             status = response.status
             if status != HTTPStatus.OK.value:
-                raise StorageClientError(
-                    status_code=status, message=await response.json()
-                )
+                raise StorageClientError(await response.json())
             return await response.json()
 
 
@@ -38,7 +36,7 @@ def _add_image_to_storage(json: Optional[Dict[str, Any]] = None) -> Dict[str, An
     response = requests.post(IMAGES, json=json)
     status = response.status_code
     if status != HTTPStatus.CREATED.value:
-        raise StorageClientError(status_code=status, message=response.json())
+        raise StorageClientError(response.json())
     return response.json()
 
 
@@ -55,9 +53,7 @@ async def _get_all_user_images(user_id: int) -> List[Dict[str, Any]]:
         async with session.get(f'{USER_IMAGES}/{user_id}') as response:
             status = response.status
             if status != HTTPStatus.OK.value:
-                raise StorageClientError(
-                    status_code=status, message=await response.json()
-                )
+                raise StorageClientError(await response.json())
             return await response.json()
 
 

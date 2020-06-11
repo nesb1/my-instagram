@@ -1,5 +1,6 @@
 from copy import deepcopy
 from datetime import datetime, timedelta
+from http import HTTPStatus
 from typing import Any, Awaitable, Dict, Optional
 
 import jwt
@@ -9,7 +10,7 @@ from final_project.config import tokens_settings
 from final_project.data_access_layer.users import UsersDataAccessLayer
 from final_project.database.database import create_session, run_in_threadpool
 from final_project.database.models import User
-from final_project.exceptions import AuthDALError
+from final_project.exceptions import DALError
 from final_project.messages import Message
 from final_project.models import OutUser, TokensResponse, UserWithTokens
 from final_project.password import get_password_hash
@@ -26,7 +27,9 @@ async def _get_user_from_db(user_id: int) -> UserWithTokens:
         user_id, without_error=True, need_tokens=True
     )
     if not user:
-        raise AuthDALError(Message.USER_DOES_NOT_EXISTS.value)
+        raise DALError(
+            HTTPStatus.UNAUTHORIZED.value, Message.USER_DOES_NOT_EXISTS.value
+        )
     return user  # type: ignore
 
 
@@ -35,10 +38,14 @@ def _get_user_id(token: str) -> int:
         payload: Dict[str, Any] = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get('sub')
         if not user_id or not isinstance(user_id, int):
-            raise AuthDALError(Message.NOT_EXPECTING_PAYLOAD.value)
+            raise DALError(
+                HTTPStatus.UNAUTHORIZED.value, Message.NOT_EXPECTING_PAYLOAD.value
+            )
         return user_id
     except PyJWTError:
-        raise AuthDALError(Message.COULD_NOT_VALIDATE_CREDENTIALS.value)
+        raise DALError(
+            HTTPStatus.UNAUTHORIZED.value, Message.COULD_NOT_VALIDATE_CREDENTIALS.value
+        )
 
 
 def _is_valid_token(actual_token: str, expected_token: str) -> bool:
@@ -55,7 +62,7 @@ async def check_authorization(token: str = Depends(oauth_scheme),) -> OutUser:
     user = await _get_user_from_db(user_id)
     if _is_valid_token(token, user.access_token.decode()):
         return OutUser.from_orm(user)
-    raise AuthDALError(Message.ACCESS_TOKEN_OUTDATED.value)
+    raise DALError(HTTPStatus.UNAUTHORIZED.value, Message.ACCESS_TOKEN_OUTDATED.value)
 
 
 def _is_password_correct(password: str, expected_password_hash: str) -> bool:
@@ -71,10 +78,10 @@ def _authenticate_user(username: str, password: str) -> Awaitable[OutUser]:
         ).first()
         user = deepcopy(user)
     if user is None:
-        raise AuthDALError(message)
+        raise DALError(HTTPStatus.UNAUTHORIZED.value, message)
     if _is_password_correct(password, user.password_hash):
         return OutUser.from_orm(user)  # type: ignore
-    raise AuthDALError(message)
+    raise DALError(HTTPStatus.UNAUTHORIZED.value, message)
 
 
 def _create_token(user_id: int, expires_delta: timedelta) -> bytes:
@@ -123,5 +130,7 @@ async def refresh_tokens(refresh_token: str) -> TokensResponse:
     user_id = _get_user_id(refresh_token)
     user = await _get_user_from_db(user_id)
     if not _is_valid_token(refresh_token, user.refresh_token.decode()):
-        raise AuthDALError(Message.INVALID_REFRESH_TOKEN.value)
+        raise DALError(
+            HTTPStatus.UNAUTHORIZED.value, Message.INVALID_REFRESH_TOKEN.value
+        )
     return await _create_tokens(user)

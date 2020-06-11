@@ -2,17 +2,16 @@ import pytest
 from final_project.data_access_layer.post import PostDAL
 from final_project.database.database import create_session
 from final_project.database.models import Post
-from final_project.exceptions import PostDALError, PostDALNotExistsError, StorageError
+from final_project.exceptions import DALError, StorageError
 from final_project.messages import Message
-from mock import AsyncMock
-
 from final_project.models import ImageWithPath
+from mock import AsyncMock
 
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('_init_db')
 async def test_get_post_when_post_not_exists_will_raise_error():
-    with pytest.raises(PostDALNotExistsError):
+    with pytest.raises(DALError):
         await PostDAL.get_post(1)
 
 
@@ -31,7 +30,7 @@ def patched_storage_client(mocker):
 @pytest.fixture()
 def mock_get_image_from_storage(patched_storage_client):
     patched_storage_client.get_image_from_storage_async = AsyncMock(
-        return_value=ImageWithPath(image=b'1234',path='path')
+        return_value=ImageWithPath(image=b'1234', path='path')
     )
     return patched_storage_client
 
@@ -53,7 +52,7 @@ async def test__get_post_when_image_does_not_exists_on_storage(patched_storage_c
     patched_storage_client.get_image_from_storage_async = AsyncMock(
         side_effect=StorageError(Message.IMAGE_DOES_NOT_EXISTS_ON_STORAGE.value)
     )
-    with pytest.raises(PostDALError):
+    with pytest.raises(DALError):
         await PostDAL.get_post(1)
 
 
@@ -101,7 +100,7 @@ async def test_like_post_save_like_in_db(id_, users):
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('_init_db', '_add_user')
 async def test_like_post_raises_error_if_post_does_not_exists():
-    with pytest.raises(PostDALNotExistsError):
+    with pytest.raises(DALError):
         await PostDAL.like(1, 1)
 
 
@@ -113,7 +112,7 @@ async def _add_like():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('_init_db', '_add_user', '_add_post', '_add_like')
 async def test_like_post_raises_error_if_like_from_this_user_already_exists():
-    with pytest.raises(PostDALError):
+    with pytest.raises(DALError):
         await PostDAL.like(1, 1)
 
 
@@ -141,5 +140,5 @@ async def test_remove_like_deletes_it_in_db_with_multiple_likes_case():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('_init_db', '_add_user', '_add_post')
 async def test_remove_like_if_like_exists_will_raises_error():
-    with pytest.raises(PostDALNotExistsError):
+    with pytest.raises(DALError):
         await PostDAL.remove_like(1, 1)

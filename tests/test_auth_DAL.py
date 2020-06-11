@@ -9,7 +9,7 @@ from final_project.data_access_layer.auth import (
 )
 from final_project.database.database import create_session
 from final_project.database.models import User
-from final_project.exceptions import AuthDALError
+from final_project.exceptions import DALError
 
 
 @pytest.fixture()
@@ -46,7 +46,7 @@ async def test_get_tokens_with_valid_username_and_password(username, password, t
 async def test_get_tokens_with_invalid_username_and_password_raises_error(
     username, password
 ):
-    with pytest.raises(AuthDALError):
+    with pytest.raises(DALError):
         await generate_tokens(username, password)
 
 
@@ -82,7 +82,7 @@ async def test_get_tokens_generates_new_token_pair_for_new_authorization_and_old
 ):
     # старая пара должна быть не валидна, хотя время жизни токена еще не истекло
     await generate_tokens(username, password)
-    with pytest.raises(AuthDALError):
+    with pytest.raises(DALError):
         await check_authorization(tokens.access_token.decode())
 
 
@@ -107,7 +107,7 @@ async def test_refresh_tokens_saves_new_tokens_pair_to_db(username, password, to
 @pytest.mark.usefixtures('_init_db', '_add_user')
 async def test_refresh_tokens_with_invalid_refresh_token():
     invalid_token = '123'
-    with pytest.raises(AuthDALError):
+    with pytest.raises(DALError):
         await refresh_tokens(invalid_token)
 
 
@@ -115,12 +115,12 @@ async def test_refresh_tokens_with_invalid_refresh_token():
 @pytest.mark.usefixtures('_init_db', '_add_user', '_mock_utc_now')
 async def test_refresh_with_old_refresh_token_raises_error(username, password, tokens):
     await refresh_tokens(tokens.refresh_token.decode())
-    with pytest.raises(AuthDALError):
+    with pytest.raises(DALError):
         await refresh_tokens(tokens.refresh_token.decode())
 
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('_init_db', '_add_user')
 async def test_generate_tokens_with_invalid_password(username):
-    with pytest.raises(AuthDALError):
+    with pytest.raises(DALError):
         await generate_tokens(username, '2')

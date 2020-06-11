@@ -7,7 +7,7 @@ from final_project.data_access_layer.storage import (
     get_image,
     save_image,
 )
-from final_project.exceptions import StorageDALNotExistsError
+from final_project.exceptions import DALError
 from final_project.utils import rmtree
 from PIL.Image import Image
 
@@ -62,7 +62,7 @@ def test_save_image(image):
 
 
 def test_get_image_from_storage_with_not_exists_path_raises_error():
-    with pytest.raises(StorageDALNotExistsError):
+    with pytest.raises(DALError):
         get_image(pathlib.Path('12343'))
 
 
@@ -82,14 +82,14 @@ def test_get_image_from_storage(save_image_fixture):
 
 
 def test_get_all_users_images_when_main_folder_does_not_exists():
-    with pytest.raises(StorageDALNotExistsError):
+    with pytest.raises(DALError):
         get_all_user_images(1)
 
 
 def test_get_all_users_images_when_user_does_not_exists_images(proj_root):
     image_folder = (proj_root / image_storage_settings.storage_folder_name).resolve()
     image_folder.mkdir()
-    with pytest.raises(StorageDALNotExistsError):
+    with pytest.raises(DALError):
         get_all_user_images(1)
 
 

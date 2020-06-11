@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from typing import Awaitable, List, Union
 
 from final_project import storage_client, utils
@@ -5,11 +6,7 @@ from final_project.data_access_layer.serialization import serialize
 from final_project.database.database import create_session, run_in_threadpool
 from final_project.database.models import Post as DB_Post
 from final_project.database.models import User
-from final_project.exceptions import (
-    PaginationError,
-    UsersDALDoesNotExistsError,
-    UsersDALError,
-)
+from final_project.exceptions import DALError, PaginationError
 from final_project.messages import Message
 from final_project.models import (
     ImagePath,
@@ -36,7 +33,9 @@ class UsersDataAccessLayer:
                 session.query(User).filter(User.username == user.username).first()
             )
             if existing_user:
-                raise UsersDALError(Message.USER_ALREADY_EXISTS.value)
+                raise DALError(
+                    HTTPStatus.BAD_REQUEST.value, Message.USER_ALREADY_EXISTS.value
+                )
             new_user = User(
                 username=user.username, password_hash=get_password_hash(user.password)
             )
@@ -63,7 +62,9 @@ class UsersDataAccessLayer:
     ) -> Awaitable[User]:
         user = session.query(User).filter(User.id == user_id).first()
         if not user and not without_error:
-            raise UsersDALDoesNotExistsError(Message.USER_DOES_NOT_EXISTS.value)
+            raise DALError(
+                HTTPStatus.NOT_FOUND.value, Message.USER_DOES_NOT_EXISTS.value
+            )
         return user
 
     @staticmethod
@@ -77,7 +78,10 @@ class UsersDataAccessLayer:
         user_id: int, want_subscribe_on_user_with_id: int
     ) -> List[OutUser]:
         if user_id == want_subscribe_on_user_with_id:
-            raise UsersDALError(Message.USER_CANNOT_SUBSCRIBE_ON_HIMSELF.value)
+            raise DALError(
+                HTTPStatus.BAD_REQUEST.value,
+                Message.USER_CANNOT_SUBSCRIBE_ON_HIMSELF.value,
+            )
         with create_session() as session:
             user_who_wants_subscribe = await UsersDataAccessLayer._get_user(
                 user_id, session
@@ -88,7 +92,10 @@ class UsersDataAccessLayer:
             if UsersDataAccessLayer._is_user_subscribed_on_another_user(
                 another_user, user_who_wants_subscribe.subscriptions
             ):
-                raise UsersDALError(Message.USER_ALREADY_SUBSCRIBED_ON_THIS_USER.value)
+                raise DALError(
+                    HTTPStatus.BAD_REQUEST.value,
+                    Message.USER_ALREADY_SUBSCRIBED_ON_THIS_USER.value,
+                )
             user_who_wants_subscribe.subscriptions.append(another_user)
             return UsersDataAccessLayer._serialize_to_list_out_users(
                 user_who_wants_subscribe.subscriptions
@@ -103,7 +110,10 @@ class UsersDataAccessLayer:
         user_id: int, want_unsubscribe_on_user_with_id: int
     ) -> List[OutUser]:
         if user_id == want_unsubscribe_on_user_with_id:
-            raise UsersDALError(Message.USER_CANNOT_UNSUBSCRIBE_FROM_HIMSELF.value)
+            raise DALError(
+                HTTPStatus.BAD_REQUEST.value,
+                Message.USER_CANNOT_UNSUBSCRIBE_FROM_HIMSELF.value,
+            )
         with create_session() as session:
             user_who_wants_unsubscribe = await UsersDataAccessLayer._get_user(
                 user_id, session
@@ -115,7 +125,10 @@ class UsersDataAccessLayer:
             if not UsersDataAccessLayer._is_user_subscribed_on_another_user(
                 another_user, subscriptions
             ):
-                raise UsersDALError(Message.USER_NOT_SUBSCRIBED_ON_THIS_USER.value)
+                raise DALError(
+                    HTTPStatus.BAD_REQUEST.value,
+                    Message.USER_NOT_SUBSCRIBED_ON_THIS_USER.value,
+                )
             subscriptions.remove(another_user)
             return UsersDataAccessLayer._serialize_to_list_out_users(subscriptions)
 
@@ -166,5 +179,5 @@ class UsersDataAccessLayer:
                         for p in utils.get_pagination(posts, page, size)
                     ]
                 except PaginationError as e:
-                    raise UsersDALError(str(e))
+                    raise DALError(HTTPStatus.BAD_REQUEST.value, str(e))
             return []
